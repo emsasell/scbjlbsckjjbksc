@@ -31,3 +31,14 @@ export function adminCookie(user:SessionUser){return {name:COOKIE,value:encode(u
 export function clearAdminCookie(){return {name:COOKIE,value:'',httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'lax' as const,path:'/',maxAge:0}}
 export async function logAction(action:string,details=''){const user=await currentAdmin();const username=user?.username||'system';if(db){try{await ensureSchema();await db`INSERT INTO action_log(username,action,details) VALUES(${username},${action},${details})`}catch{}}}
 export const passwordHash=hash;
+
+// Compatibility helpers for account routes.
+export async function validAdminPassword(password:string){
+  if(!ownerPassword) return false;
+  const a=Buffer.from(String(password)); const b=Buffer.from(ownerPassword);
+  return a.length===b.length && crypto.timingSafeEqual(a,b);
+}
+export async function loginUser(login:string,password:string){
+  return authenticate(String(login||''),String(password||''));
+}
+export const userCookie=adminCookie;
