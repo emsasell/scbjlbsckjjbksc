@@ -11,6 +11,7 @@ export async function POST(req:Request){
  try{
   const form=await req.formData(); const file=form.get('file');
   if(!(file instanceof File)) return NextResponse.json({error:'Файл не найден'},{status:400});
+  if(file.type.startsWith('video/') && !(user.owner||user.is_admin)) return NextResponse.json({error:'Создатель района не может загружать видео. Видео доступны только администраторам.'},{status:403});
   if(!file.type.startsWith('image/')&&!file.type.startsWith('video/')) return NextResponse.json({error:'Можно загружать изображения и видео'},{status:400});
   if(file.size>100*1024*1024) return NextResponse.json({error:'Максимальный размер файла — 100 МБ'},{status:413});
   const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'-') || 'image';

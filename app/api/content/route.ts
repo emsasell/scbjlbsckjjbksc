@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { db, ensureSchema } from '../../../lib/db';
 import { isAdmin, logAction } from '../../../lib/auth';
 
-const kinds=['news','district','tab','link'] as const;
+const kinds=['news','district','tab','link','video'] as const;
 function slugify(s:string){return s.toLowerCase().trim().replace(/[^a-zа-яё0-9]+/gi,'-').replace(/^-|-$/g,'')+'-'+Date.now().toString(36)}
 function cleanText(v:any){return String(v??'').trim()}
 function normalizeUrl(v:any){return cleanText(v).replace(/\/$/,'').toLowerCase()}
@@ -16,12 +16,12 @@ function normalizeLinks(value:any){
  for(const link of links){const key=`${link.title.toLowerCase()}|${normalizeUrl(link.url)}`;if(seen.has(key))throw new Error('Одинаковые ссылки нельзя добавлять повторно.');seen.add(key)}
  return links;
 }
-function safePublished(v:any, kind:string){ if(kind!=='news') return null; if(!v)return new Date(); const raw=String(v); const d=/[zZ]|[+-]\d\d:?\d\d$/.test(raw)?new Date(raw):new Date(raw+'+04:00'); if(Number.isNaN(d.getTime()))throw new Error('Некорректная дата публикации.'); return d; }
+function safePublished(v:any, kind:string){ if(kind!=='news'&&kind!=='video') return null; if(!v)return new Date(); const raw=String(v); const d=/[zZ]|[+-]\d\d:?\d\d$/.test(raw)?new Date(raw):new Date(raw+'+04:00'); if(Number.isNaN(d.getTime()))throw new Error('Некорректная дата публикации.'); return d; }
 function payload(x:any){
  const kind=kinds.includes(x.kind)?x.kind:'news'; const url=cleanText(x.url)||null;
  if(kind==='link'&&!url) throw new Error('Для канала или ссылки необходимо указать URL.');
  if(url&&!validUrl(url)) throw new Error('Укажите корректный URL, начинающийся с http:// или https://.');
- const published_at=safePublished(x.published_at,kind); const status=kind==='news'?(x.status==='pending'?'pending':x.status==='rejected'?'rejected':published_at&&published_at.getTime()>Date.now()?'scheduled':'published'):'published'; return {kind,title:cleanText(x.title),body:String(x.body||''),image_url:cleanText(x.image_url)||null,video_url:cleanText(x.video_url)||null,video_title:cleanText(x.video_title)||null,video_description:cleanText(x.video_description)||null,video_preview:cleanText(x.video_preview)||null,published_at,url,extra_links:normalizeLinks(x.extra_links),sort_order:Number(x.sort_order)||0,status,creator_id:x.creator_id?Number(x.creator_id):null,minecraft_version:cleanText(x.minecraft_version)||null}
+ const published_at=safePublished(x.published_at,kind); const status=(kind==='news'||kind==='video')?(x.status==='pending'?'pending':x.status==='rejected'?'rejected':published_at&&published_at.getTime()>Date.now()?'scheduled':'published'):'published'; return {kind,title:cleanText(x.title),body:String(x.body||''),image_url:cleanText(x.image_url)||null,video_url:cleanText(x.video_url)||null,video_title:cleanText(x.video_title)||null,video_description:cleanText(x.video_description)||null,video_preview:cleanText(x.video_preview)||null,published_at,url,extra_links:normalizeLinks(x.extra_links),sort_order:Number(x.sort_order)||0,status,creator_id:x.creator_id?Number(x.creator_id):null,minecraft_version:cleanText(x.minecraft_version)||null}
 }
 async function duplicateError(x:any,id?:number){
  if(!db) return null;

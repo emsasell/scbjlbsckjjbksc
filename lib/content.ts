@@ -20,5 +20,5 @@ export async function getAllContent(): Promise<Item[]> {
 }
 export async function getPublicContent() {
   const items = await getAllContent();
-  const now=Date.now(); return { news: items.filter(x=>x.kind==='news' && (x.status||'published')==='published' && (!x.published_at||new Date(x.published_at).getTime()<=now)), districts: items.filter(x=>x.kind==='district'), tabs: items.filter(x=>x.kind==='tab'), links: items.filter(x=>x.kind==='link') };
+  const now=Date.now(); return { videos: items.filter(x=>x.kind==='video' && (x.status||'published')==='published' && (!x.published_at||new Date(x.published_at).getTime()<=now)), news: items.filter(x=>x.kind==='news' && (x.status||'published')==='published' && (!x.published_at||new Date(x.published_at).getTime()<=now)), districts: items.filter(x=>x.kind==='district'), tabs: items.filter(x=>x.kind==='tab'), links: items.filter(x=>x.kind==='link') };
 }

@@ -23,6 +23,7 @@ export async function POST(req:Request){
   const admin=await isAdmin();
   const districtId=admin ? (x.district_id==null?null:Number(x.district_id)) : user.district_id;
   if(!admin&&!districtId)return NextResponse.json({error:'К вашему логину не привязан район'},{status:403});
+  if(!admin && (x.video_url||x.video_title||x.video_description||x.video_preview)) return NextResponse.json({error:'Создатель района не может публиковать видео. Видео добавляют только администраторы.'},{status:403});
   const status=admin?'published':'pending';
   const result=await db`INSERT INTO content(kind,title,slug,body,image_url,video_url,video_title,video_description,video_preview,published_at,url,status,creator_id) VALUES('news',${title},${slug(title)},${body},${x.image_url||null},${x.video_url||null},${x.video_title||null},${x.video_description||null},${x.video_preview||null},NOW(),${x.url||null},${status},${user.id||null}) RETURNING *`;
   await logAction(admin?'Опубликована новость':'Отправлена новость на модерацию',title);
