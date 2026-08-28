@@ -42,3 +42,10 @@ export async function loginUser(login:string,password:string){
   return authenticate(String(login||''),String(password||''));
 }
 export const userCookie=adminCookie;
+
+// Compatibility helper used by account/submission routes.
+// It returns the currently authenticated user and validates session_version,
+// so changing a password invalidates that user's older sessions.
+export async function sessionUser(): Promise<SessionUser|null> {
+  return currentAdmin();
+}
