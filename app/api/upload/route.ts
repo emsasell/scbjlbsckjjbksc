@@ -15,12 +15,13 @@ export async function POST(req:Request){
   if(file.size>25*1024*1024) return NextResponse.json({error:'Максимальный размер изображения — 25 МБ'},{status:413});
   const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'-') || 'image';
   const access=(process.env.BLOB_ACCESS||'private').toLowerCase()==='public'?'public':'private';
-  const blob=await put(`megamine/${Date.now()}-${safeName}`,file,{access,token} as any);
+  const blob=await put(`megamine/${Date.now()}-${safeName}`,file,{access,token,addRandomSuffix:true,contentType:file.type} as any);
   const url=access==='private'?`/api/media?url=${encodeURIComponent(blob.url)}`:blob.url;
   return NextResponse.json({url,access});
  }catch(error:any){
+  console.error('Blob upload failed:',error);
   const raw=String(error?.message||'Не удалось загрузить изображение');
-  if(/unauthorized|forbidden|401|403/i.test(raw)) return NextResponse.json({error:'Vercel Blob отклонил доступ. Подключите Blob Store к этому Project и заново создайте BLOB_READ_WRITE_TOKEN в Settings → Environment Variables. Не используйте Store ID или Base URL вместо токена.'},{status:503});
+  if(/unauthorized|forbidden|401|403|credentials|token/i.test(raw)) return NextResponse.json({error:'Vercel Blob отклонил доступ. Проверьте, что Blob Store подключён именно к этому Project, а BLOB_READ_WRITE_TOKEN относится к этому Store и добавлен в Production.'},{status:503});
   return NextResponse.json({error:raw},{status:500});
  }
 }

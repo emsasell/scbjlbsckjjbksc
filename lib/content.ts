@@ -9,8 +9,14 @@ const demo: Item[] = [
 
 export async function getAllContent(): Promise<Item[]> {
   if (!db) return demo;
-  await ensureSchema();
-  return await db<Item[]>`SELECT * FROM content ORDER BY sort_order ASC, created_at DESC`;
+  try {
+    await ensureSchema();
+    return await db<Item[]>`SELECT * FROM content ORDER BY sort_order ASC, created_at DESC`;
+  } catch (error) {
+    // Не даём публичной странице падать с 500 из-за временной ошибки БД.
+    console.error('MegaMine database read failed:', error);
+    return demo;
+  }
 }
 export async function getPublicContent() {
   const items = await getAllContent();
