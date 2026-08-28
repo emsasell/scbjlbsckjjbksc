@@ -1,5 +1,5 @@
-import { getPublicContent } from '@/lib/content';
-import HomeClient from '@/components/HomeClient';
+import { getPublicContent } from '../lib/content';
+import HomeClient from '../components/HomeClient';
 
 export const dynamic = 'force-dynamic';
 

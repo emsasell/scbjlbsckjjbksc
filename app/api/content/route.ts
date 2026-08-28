@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { db, ensureSchema } from '@/lib/db';
-import { isAdmin } from '@/lib/auth';
+import { db, ensureSchema } from '../../../lib/db';
+import { isAdmin } from '../../../lib/auth';
 
 export async function GET(){ if(!db) return NextResponse.json([]); await ensureSchema(); return NextResponse.json(await db`SELECT * FROM content ORDER BY sort_order ASC, created_at DESC`); }
 function slugify(s:string){return s.toLowerCase().trim().replace(/[^a-zа-яё0-9]+/gi,'-').replace(/^-|-$/g,'')+'-'+Date.now().toString(36)}

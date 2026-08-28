@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { adminCookie, validPassword } from '@/lib/auth';
+import { adminCookie, validPassword } from '../../../../lib/auth';
 export async function POST(req:Request){
  const {password}=await req.json().catch(()=>({}));
  if(!validPassword(String(password||''))) return NextResponse.json({error:'Неверный пароль'}, {status:401});

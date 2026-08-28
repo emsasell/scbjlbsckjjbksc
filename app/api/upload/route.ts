@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
-import { isAdmin } from '@/lib/auth';
+import { isAdmin } from '../../../lib/auth';
 export async function POST(req:Request){
  if(!(await isAdmin())) return NextResponse.json({error:'Unauthorized'},{status:401});
  if(!process.env.BLOB_READ_WRITE_TOKEN) return NextResponse.json({error:'BLOB_READ_WRITE_TOKEN не настроен'}, {status:503});
