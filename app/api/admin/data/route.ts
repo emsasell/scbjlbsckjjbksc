@@ -30,7 +30,7 @@ export async function POST(req:Request){
    await logAction('Добавлен аккаунт',String(x.username).trim()); return NextResponse.json({ok:true});
   }
   if(x.type==='settings'){
-   const v={app_version:String(x.app_version||'').trim(),app_description:String(x.app_description||'').trim(),megamine_clock:String(x.megamine_clock||'').trim()}; if(!v.app_version)return NextResponse.json({error:'Введите версию сайта'},{status:400}); await setSettings(v); await logAction('Изменены настройки сайта',`Версия ${v.app_version}; дата/время ${v.megamine_clock||'авто UTC+4'}`); return NextResponse.json({ok:true});
+   const v={app_version:String(x.app_version||'').trim(),app_description:String(x.app_description||'').trim(),megamine_date:String(x.megamine_date||'').trim()}; if(!v.app_version)return NextResponse.json({error:'Введите версию сайта'},{status:400}); await setSettings(v); await logAction('Изменены настройки сайта',`Версия ${v.app_version}; дата ${v.megamine_date||'автоматическая'}`); return NextResponse.json({ok:true});
   }
   if(x.type==='broadcast'){
    const title=String(x.title||'').trim(),body=String(x.body||'').trim();if(!title)return NextResponse.json({error:'Введите заголовок рассылки'},{status:400}); await db`INSERT INTO broadcasts(title,body,active) VALUES(${title},${body},${asBool(x.active)})`; await logAction('Создана рассылка',title);return NextResponse.json({ok:true});

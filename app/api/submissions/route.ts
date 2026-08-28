@@ -21,11 +21,17 @@ export async function POST(req:Request){
   const body=String(x.body||'');
   if(!title)return NextResponse.json({error:'Введите название'},{status:400});
   const admin=await isAdmin();
-  const districtId=admin ? (x.district_id==null?null:Number(x.district_id)) : user.district_id;
-  if(!admin&&!districtId)return NextResponse.json({error:'К вашему логину не привязан район'},{status:403});
-  if(!admin && (x.video_url||x.video_title||x.video_description||x.video_preview)) return NextResponse.json({error:'Создатель района не может публиковать видео. Видео добавляют только администраторы.'},{status:403});
-  const status=admin?'published':'pending';
-  const result=await db`INSERT INTO content(kind,title,slug,body,image_url,video_url,video_title,video_description,video_preview,published_at,url,status,creator_id) VALUES('news',${title},${slug(title)},${body},${x.image_url||null},${x.video_url||null},${x.video_title||null},${x.video_description||null},${x.video_preview||null},NOW(),${x.url||null},${status},${user.id||null}) RETURNING *`;
-  await logAction(admin?'Опубликована новость':'Отправлена новость на модерацию',title);
+  // Любой создатель района отправляет материал именно как заявку, даже если
+  // этому же логину дополнительно выдан доступ администратора.
+  const creatorSubmission=!!user.is_creator;
+  const districtId=creatorSubmission ? user.district_id : (admin ? (x.district_id==null?null:Number(x.district_id)) : user.district_id);
+  if(!admin&&!creatorSubmission)return NextResponse.json({error:'У этого аккаунта нет права создавать новости'},{status:403});
+  if(creatorSubmission&&!districtId)return NextResponse.json({error:'К вашему логину не привязан район'},{status:403});
+  if(creatorSubmission && (x.video_url||x.video_title||x.video_description||x.video_preview)) return NextResponse.json({error:'Создатель района не может публиковать видео. Видео добавляют только администраторы.'},{status:403});
+  const status=creatorSubmission?'pending':'published';
+  const result=status==='pending'
+    ? await db`INSERT INTO content(kind,title,slug,body,image_url,published_at,url,status,creator_id) VALUES('news',${title},${slug(title)},${body},${x.image_url||null},NULL,${x.url||null},'pending',${user.id||null}) RETURNING *`
+    : await db`INSERT INTO content(kind,title,slug,body,image_url,published_at,url,status,creator_id) VALUES('news',${title},${slug(title)},${body},${x.image_url||null},NOW(),${x.url||null},'published',${user.id||null}) RETURNING *`;
+  await logAction(status==='published'?'Опубликована новость':'Отправлена новость на модерацию',title);
   return NextResponse.json({ok:true,item:result[0]});
 }
