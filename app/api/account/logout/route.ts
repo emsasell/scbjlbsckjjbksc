@@ -1,2 +1,3 @@
-import {NextResponse} from 'next/server';import {clearAdminCookie} from '@/lib/auth';
-export async function POST(){const r=NextResponse.json({ok:true});r.cookies.set(clearAdminCookie());return r}
+import {NextResponse} from 'next/server';
+export async function GET(){return NextResponse.json({error:'Система пользовательских логинов и заявок удалена'},{status:410})}
+export async function POST(){return NextResponse.json({error:'Система пользовательских логинов и заявок удалена'},{status:410})}
