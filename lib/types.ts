@@ -8,6 +8,7 @@ export type Item = {
   video_url: string | null;
   published_at: string | null;
   url: string | null;
+  extra_links: { title: string; url: string }[] | string | null;
   sort_order: number;
   created_at: string;
 };
