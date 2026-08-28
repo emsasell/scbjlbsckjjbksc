@@ -11,4 +11,5 @@ export type Item = {
   extra_links: { title: string; url: string }[] | string | null;
   sort_order: number;
   created_at: string;
+  updated_at?: string;
 };

@@ -1,7 +1,7 @@
 import postgres from 'postgres';
 
 const connectionString = process.env.DATABASE_URL;
-export const db = connectionString ? postgres(connectionString, { max: 1, ssl: 'require' }) : null;
+export const db = connectionString ? postgres(connectionString, { max: 1, ssl: 'require', prepare: false }) : null;
 
 export async function ensureSchema() {
   if (!db) return;
@@ -16,7 +16,9 @@ export async function ensureSchema() {
     published_at TIMESTAMPTZ,
     url TEXT,
     sort_order INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   )`;
   await db`ALTER TABLE content ADD COLUMN IF NOT EXISTS extra_links JSONB NOT NULL DEFAULT '[]'::jsonb`;
+  await db`ALTER TABLE content ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`;
 }

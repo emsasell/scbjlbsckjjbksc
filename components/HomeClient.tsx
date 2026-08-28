@@ -5,12 +5,14 @@ import type { Item } from '@/lib/types';
 type Props = { content: {news:Item[];districts:Item[];tabs:Item[];links:Item[]} };
 const bedrock = '26.45';
 
-export default function HomeClient({content}:Props) {
+export default function HomeClient({content:initialContent}:Props) {
+ const [content,setContent]=useState(initialContent);
  const [active,setActive]=useState('Главная');
  const [menu,setMenu]=useState(false);
  const [selected,setSelected]=useState<Item|null>(null);
  useEffect(()=>{ const on=()=>setMenu(false); window.addEventListener('resize',on); return()=>window.removeEventListener('resize',on)},[]);
  useEffect(()=>{ const on=(e:KeyboardEvent)=>{if(e.key==='Escape')setSelected(null)}; window.addEventListener('keydown',on); return()=>window.removeEventListener('keydown',on)},[]);
+ useEffect(()=>{let stopped=false;const sync=async()=>{try{const r=await fetch('/api/content',{cache:'no-store'});if(!r.ok)return;const rows:Item[]=await r.json();if(stopped)return;setContent({news:rows.filter(x=>x.kind==='news'),districts:rows.filter(x=>x.kind==='district'),tabs:rows.filter(x=>x.kind==='tab'),links:rows.filter(x=>x.kind==='link')})}catch{}};const timer=window.setInterval(sync,5000);return()=>{stopped=true;window.clearInterval(timer)}},[]);
  const tabs=[...content.tabs];
  return <div className="site-shell">
   <header className="topbar">
@@ -36,7 +38,7 @@ export default function HomeClient({content}:Props) {
  </div>
 }
 function Page({title,kicker,children}:{title:string;kicker:string;children:React.ReactNode}){return <section className="page"><span className="eyebrow">{kicker}</span><h1>{title}</h1>{children}</section>}
-function NewsGrid({items,onOpen}:{items:Item[];onOpen:(x:Item)=>void}){if(!items.length)return <Empty text="Новостей пока нет."/>;return <div className="news-grid">{items.map(n=><button className="news-card card-button" key={n.id} onClick={()=>onOpen(n)} aria-label={`Открыть: ${n.title}`}>{n.image_url&&<img src={n.image_url} alt=""/>}<div className="news-body"><time>{n.published_at?new Date(n.published_at).toLocaleDateString('ru-RU'):''}</time><h3>{n.title}</h3><p>{n.body}</p><span className="card-more">Подробнее →</span></div></button>)}</div>}
+function NewsGrid({items,onOpen}:{items:Item[];onOpen:(x:Item)=>void}){if(!items.length)return <Empty text="Новостей пока нет."/>;return <div className="news-grid">{items.map(n=><button className="news-card card-button" key={n.id} onClick={()=>onOpen(n)} aria-label={`Открыть: ${n.title}`}>{n.image_url&&<img src={n.image_url} alt=""/>}<div className="news-body"><time>{n.published_at?new Date(n.published_at).toLocaleString('ru-RU',{dateStyle:'short',timeStyle:'medium'}):''}</time><h3>{n.title}</h3><p>{n.body}</p><span className="card-more">Подробнее →</span></div></button>)}</div>}
 function DistrictGrid({items,onOpen}:{items:Item[];onOpen:(x:Item)=>void}){if(!items.length)return <Empty text="Районов пока нет."/>;return <div className="district-grid">{items.map(d=><button className="district-card card-button" key={d.id} onClick={()=>onOpen(d)} aria-label={`Открыть район: ${d.title}`}>{d.image_url&&<img src={d.image_url} alt=""/>}<div><span>РАЙОН</span><h3>{d.title}</h3><p>{d.body}</p><b className="card-more">Подробнее →</b></div></button>)}</div>}
 function itemLinks(value:any):{title:string;url:string}[]{
  if(Array.isArray(value)) return value.filter(x=>x&&x.title&&x.url);
