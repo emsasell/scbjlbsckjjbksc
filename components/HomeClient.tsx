@@ -6,7 +6,8 @@ type Props = { content: {news:Item[];districts:Item[];tabs:Item[];links:Item[]} 
 const defaultBedrock = '—';
 
 export default function HomeClient({content:initialContent}:Props) {
- const [content,setContent]=useState(initialContent);\n const [settings,setSettings]=useState({app_version:'1.0.0',minecraft_java:'',minecraft_bedrock:defaultBedrock});
+ const [content,setContent]=useState(initialContent);
+ const [settings,setSettings]=useState({app_version:'1.0.0',minecraft_java:'',minecraft_bedrock:defaultBedrock});
  const [active,setActive]=useState('Главная');
  const [menu,setMenu]=useState(false);
  const [selected,setSelected]=useState<Item|null>(null); const [linksOpen,setLinksOpen]=useState(false);
