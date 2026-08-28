@@ -1,1 +1,0 @@
-import {redirect} from 'next/navigation';import {isAdmin} from '@/lib/auth';import AdminAccounts from '@/components/AdminAccounts';export default async function P(){if(!(await isAdmin()))redirect('/admin/login');return <AdminAccounts/>}

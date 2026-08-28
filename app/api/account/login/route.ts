@@ -1,2 +1,18 @@
-import {NextResponse} from 'next/server';import {loginUser,userCookie,validAdminPassword,adminCookie} from '@/lib/auth';
-export async function POST(req:Request){try{const {login,password}=await req.json();const l=String(login||'').trim(),p=String(password||'');if(l==='0'&&validAdminPassword(p)){const r=NextResponse.json({ok:true,role:'owner'});r.cookies.set(adminCookie());return r}const u=await loginUser(l,p);if(!u)return NextResponse.json({error:'Неверный логин или пароль'},{status:401});const r=NextResponse.json({ok:true,role:u.role,district_id:u.district_id});r.cookies.set(userCookie(u.id));return r}catch{return NextResponse.json({error:'Не удалось войти'},{status:400})}}
+import {NextResponse} from 'next/server';
+import {loginUser,adminCookie,validAdminPassword} from '@/lib/auth';
+
+export async function POST(req:Request){
+  try{
+    const {login,password}=await req.json();
+    const username=String(login||'').trim();
+    const pass=String(password||'');
+    if(!username||!pass)return NextResponse.json({error:'Введите логин и пароль'},{status:400});
+    // Explicit owner check remains synchronous for compatibility.
+    if(username==='0'&&!validAdminPassword(pass))return NextResponse.json({error:'Неверный логин или пароль'},{status:401});
+    const user=await loginUser(username,pass);
+    if(!user)return NextResponse.json({error:'Неверный логин или пароль'},{status:401});
+    const res=NextResponse.json({ok:true,user:{id:user.id,login:user.username,username:user.username,role:user.role,district_id:user.district_id,is_admin:user.is_admin,is_creator:user.is_creator}});
+    res.cookies.set(adminCookie(user));
+    return res;
+  }catch(e:any){return NextResponse.json({error:e?.message||'Ошибка входа'},{status:500})}
+}

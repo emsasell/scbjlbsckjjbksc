@@ -1,6 +1,30 @@
-import {NextResponse} from 'next/server';import {db,ensureSchema} from '@/lib/db';import {sessionUser,isAdmin} from '@/lib/auth';
-const clean=(v:any)=>String(v??'').trim();const slug=(s:string)=>s.toLowerCase().replace(/[^a-zа-яё0-9]+/gi,'-').replace(/^-|-$/g,'')+'-'+Date.now().toString(36);
-async function log(actor:string,action:string,details:string){if(db)await db`INSERT INTO action_log(actor,action,details) VALUES (${actor},${action},${details})`}
-export async function GET(){if(!db)return NextResponse.json([]);if(!await isAdmin())return NextResponse.json({error:'Unauthorized'},{status:401});await ensureSchema();return NextResponse.json(await db`SELECT c.*,u.login AS author_login FROM content c LEFT JOIN users u ON u.id=c.author_user_id WHERE c.status='pending' ORDER BY c.created_at DESC`)}
-export async function POST(req:Request){if(!db)return NextResponse.json({error:'DATABASE_URL не настроен'},{status:503});const u=await sessionUser();const admin=await isAdmin();if(!u&&!admin)return NextResponse.json({error:'Войдите в аккаунт'},{status:401});await ensureSchema();const x=await req.json();const title=clean(x.title),body=String(x.body||'');const districtId=Number(x.district_id||u?.district_id||0);if(!title||!districtId)return NextResponse.json({error:'Укажите район и название'},{status:400});const ok=await db`SELECT id FROM content WHERE id=${districtId} AND kind='district' LIMIT 1`;if(!ok.length)return NextResponse.json({error:'Район не найден'},{status:404});if(u&&u.role==='district'&&Number(u.district_id)!==districtId)return NextResponse.json({error:'Можно публиковать только в своём районе'},{status:403});const status=admin?'approved':'pending';const rows=await db`INSERT INTO content(kind,title,slug,body,image_url,published_at,district_id,author_user_id,status,created_at,updated_at) VALUES ('news',${title},${slug(title)},${body},${clean(x.image_url)||null},${x.published_at?new Date(x.published_at):new Date()},${districtId},${u?.id||null},${status},NOW(),NOW()) RETURNING *`;await log(u?.login||'0',status==='approved'?'Опубликована новость':'Отправлена новость на модерацию',title);return NextResponse.json(rows[0],{status:201})}
-export async function PUT(req:Request){if(!db)return NextResponse.json({error:'DATABASE_URL не настроен'},{status:503});if(!await isAdmin())return NextResponse.json({error:'Unauthorized'},{status:401});await ensureSchema();const {id,decision}=await req.json();if(!['approved','rejected'].includes(decision))return NextResponse.json({error:'Некорректное решение'},{status:400});const rows=await db`UPDATE content SET status=${decision},updated_at=NOW() WHERE id=${Number(id)} RETURNING *`;if(!rows.length)return NextResponse.json({error:'Новость не найдена'},{status:404});await log('admin',decision==='approved'?'Одобрена публикация':'Отклонена публикация',rows[0].title);return NextResponse.json(rows[0])}
+import {NextResponse} from 'next/server';
+import {db,ensureSchema} from '@/lib/db';
+import {sessionUser,isAdmin,logAction} from '@/lib/auth';
+
+const slug=(s:string)=>s.toLowerCase().trim().replace(/[^a-zа-яё0-9]+/gi,'-').replace(/^-|-$/g,'')+'-'+Date.now();
+export async function GET(){
+  const user=await sessionUser();
+  if(!user)return NextResponse.json({error:'Unauthorized'},{status:401});
+  if(!db)return NextResponse.json([]);
+  await ensureSchema();
+  const rows=await db`SELECT * FROM content WHERE creator_id=${user.id||-1} ORDER BY created_at DESC`;
+  return NextResponse.json(rows);
+}
+export async function POST(req:Request){
+  const user=await sessionUser();
+  if(!user)return NextResponse.json({error:'Unauthorized'},{status:401});
+  if(!db)return NextResponse.json({error:'DATABASE_URL не настроен'},{status:503});
+  await ensureSchema();
+  const x=await req.json();
+  const title=String(x.title||'').trim();
+  const body=String(x.body||'');
+  if(!title)return NextResponse.json({error:'Введите название'},{status:400});
+  const admin=await isAdmin();
+  const districtId=admin ? (x.district_id==null?null:Number(x.district_id)) : user.district_id;
+  if(!admin&&!districtId)return NextResponse.json({error:'К вашему логину не привязан район'},{status:403});
+  const status=admin?'published':'pending';
+  const result=await db`INSERT INTO content(kind,title,slug,body,image_url,published_at,url,status,creator_id) VALUES('news',${title},${slug(title)},${body},${x.image_url||null},NOW(),${x.url||null},${status},${user.id||null}) RETURNING *`;
+  await logAction(admin?'Опубликована новость':'Отправлена новость на модерацию',title);
+  return NextResponse.json({ok:true,item:result[0]});
+}
