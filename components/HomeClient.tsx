@@ -3,16 +3,19 @@ import { useEffect, useState } from 'react';
 import type { Item } from '@/lib/types';
 
 type Props = { content: {news:Item[];districts:Item[];tabs:Item[];links:Item[]} };
-const bedrock = '26.45';
+const defaultBedrock = '—';
 
 export default function HomeClient({content:initialContent}:Props) {
- const [content,setContent]=useState(initialContent);
+ const [content,setContent]=useState(initialContent);\n const [settings,setSettings]=useState({app_version:'1.0.0',minecraft_java:'',minecraft_bedrock:defaultBedrock});
  const [active,setActive]=useState('Главная');
  const [menu,setMenu]=useState(false);
  const [selected,setSelected]=useState<Item|null>(null); const [linksOpen,setLinksOpen]=useState(false);
  useEffect(()=>{ const on=()=>setMenu(false); window.addEventListener('resize',on); return()=>window.removeEventListener('resize',on)},[]);
  useEffect(()=>{ const on=(e:KeyboardEvent)=>{if(e.key==='Escape')setSelected(null)}; window.addEventListener('keydown',on); return()=>window.removeEventListener('keydown',on)},[]);
  useEffect(()=>{let stopped=false;const sync=async()=>{try{const r=await fetch('/api/content',{cache:'no-store'});if(!r.ok)return;const rows:Item[]=await r.json();if(stopped)return;const now=Date.now();setContent({news:rows.filter(x=>x.kind==='news'&&(x.status||'published')==='published'&&(!x.published_at||new Date(x.published_at).getTime()<=now)),districts:rows.filter(x=>x.kind==='district'),tabs:rows.filter(x=>x.kind==='tab'),links:rows.filter(x=>x.kind==='link')})}catch{}};const timer=window.setInterval(sync,5000);return()=>{stopped=true;window.clearInterval(timer)}},[]);
+ useEffect(()=>{let stopped=false;const sync=async()=>{try{const r=await fetch('/api/settings',{cache:'no-store'});if(r.ok&&!stopped)setSettings(await r.json())}catch{}};sync();const t=window.setInterval(sync,7000);return()=>{stopped=true;window.clearInterval(t)}},[]);
+ const bedrock=settings.minecraft_bedrock||defaultBedrock;
+ const javaVersion=settings.minecraft_java||'—';
  const tabs=[...content.tabs];
  return <div className="site-shell">
   <header className="topbar">
@@ -24,7 +27,7 @@ export default function HomeClient({content:initialContent}:Props) {
   </header>
   <main>
    {active==='Главная' && <>
-    <section className="hero"><div className="hero-copy"><div className="eyebrow">MINECRAFT BEDROCK • {bedrock}</div><h1>Добро пожаловать<br/><em>в MegaMine</em></h1><p>Живой мир, события, районы и новости проекта — всё в одном месте.</p><div className="hero-actions"><button onClick={()=>setActive('Новости')}>Смотреть новости</button><a href="#about">О проекте ↓</a></div></div><div className="hero-avatar"><img src="/avatar.jpg" alt="MegaMine"/><div className="pixel-card">MEGAMINE<br/><small>BEDROCK {bedrock}</small></div></div></section>
+    <section className="hero"><div className="hero-copy"><div className="eyebrow">MINECRAFT JAVA {javaVersion} • BEDROCK {bedrock}</div><h1>Добро пожаловать<br/><em>в MegaMine</em></h1><p>Живой мир, события, районы и новости проекта — всё в одном месте.</p><div className="hero-actions"><button onClick={()=>setActive('Новости')}>Смотреть новости</button><a href="#about">О проекте ↓</a></div></div><div className="hero-avatar"><img src="/avatar.jpg" alt="MegaMine"/><div className="pixel-card">MEGAMINE<br/><small>JAVA {javaVersion} • BEDROCK {bedrock}</small></div></div></section>
     <section className="stats"><div><b>{content.news.length}</b><span>новостей</span></div><div><b>{content.districts.length}</b><span>районов</span></div><div><b>{content.links.length}</b><span>каналов</span></div><div><b>{bedrock}</b><span>Bedrock</span></div></section>
     <section className="section" id="about"><div className="section-head"><div><span>01</span><h2>Последние новости</h2></div><button onClick={()=>setActive('Новости')}>Все новости →</button></div><NewsGrid items={content.news.slice(0,3)} onOpen={setSelected}/></section>
     <section className="section"><div className="section-head"><div><span>02</span><h2>Районы мира</h2></div><button onClick={()=>setActive('Районы')}>Все районы →</button></div><DistrictGrid items={content.districts.slice(0,4)} onOpen={setSelected}/></section>
@@ -33,7 +36,7 @@ export default function HomeClient({content:initialContent}:Props) {
    {active==='Районы' && <Page title="Районы" kicker="Карта мира"><DistrictGrid items={content.districts} onOpen={setSelected}/></Page>}
    {tabs.map(t=>active===t.title && <Page key={t.id} title={t.title} kicker="Раздел проекта"><article className="long-card">{t.image_url&&<img src={t.image_url} alt=""/>}<div><p>{t.body}</p>{t.url&&<a className="big-link" href={t.url} target="_blank" rel="noreferrer">Открыть ссылку →</a>}</div></article></Page>)}
   </main>
-  <footer><div className="brand footer-brand"><img src="/avatar.jpg" alt="MegaMine"/><span>Mega<span>Mine</span></span></div><p>Minecraft Bedrock • {bedrock}</p><button className="footer-links-btn" onClick={()=>setLinksOpen(true)}>Ссылки</button></footer>{linksOpen&&<LinksModal items={content.links} onClose={()=>setLinksOpen(false)}/> }
+  <footer><div className="brand footer-brand"><img src="/avatar.jpg" alt="MegaMine"/><span>Mega<span>Mine</span></span></div><p>Сайт v{settings.app_version} • Java {javaVersion} • Bedrock {bedrock}</p><div className="footer-actions"><a href="/create">Создать новость</a><button className="footer-links-btn" onClick={()=>setLinksOpen(true)}>Ссылки</button></div></footer>{linksOpen&&<LinksModal items={content.links} onClose={()=>setLinksOpen(false)}/> }
   {selected&&<InfoModal item={selected} onClose={()=>setSelected(null)}/>} 
  </div>
 }
