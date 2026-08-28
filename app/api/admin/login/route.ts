@@ -1,7 +1,2 @@
-import { NextResponse } from 'next/server';
-import { adminCookie, validPassword } from '../../../../lib/auth';
-export async function POST(req:Request){
- const {password}=await req.json().catch(()=>({}));
- if(!validPassword(String(password||''))) return NextResponse.json({error:'Неверный пароль'}, {status:401});
- const res=NextResponse.json({ok:true}); const c=adminCookie(); res.cookies.set(c); return res;
-}
+import {NextResponse} from 'next/server';import {adminCookie,validPassword} from '@/lib/auth';import {db,ensureSchema} from '@/lib/db';import {verifyPassword} from '@/lib/passwords';
+export async function POST(req:Request){const {login,password}=await req.json().catch(()=>({}));const l=String(login||'0').trim(),p=String(password||'');let ok=false;if(l==='0')ok=validPassword(p);else if(db){try{await ensureSchema();const rows=await db`SELECT password_hash,can_admin FROM users WHERE login=${l} LIMIT 1`;ok=!!rows[0]?.can_admin&&verifyPassword(p,rows[0].password_hash)}catch{ok=false}}if(!ok)return NextResponse.json({error:'Неверный логин или пароль'},{status:401});const res=NextResponse.json({ok:true});res.cookies.set(adminCookie());return res}
