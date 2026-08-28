@@ -34,7 +34,7 @@ export default function AdminClient({initial}:{initial:Item[]}){
    }catch{}
  };
  useEffect(()=>{load();const t=setInterval(load,7000);return()=>clearInterval(t)},[]);
- const isKind=(s=section):s is Kind=>['news','district','tab','link'].includes(s);
+ const isKind=(s:Section):s is Kind=>s==='news'||s==='district'||s==='tab'||s==='link';
  const openSection=(s:Section)=>{setSection(s);setMsg('');if(isKind(s)){setEditId(null);setForm(empty(s));}};
  const edit=(x:Item)=>{setSection(x.kind);setEditId(x.id);setForm({...x,extra_links:Array.isArray(x.extra_links)?x.extra_links:[]});window.scrollTo({top:0,behavior:'smooth'});};
  const upload=async(file:File):Promise<string|null>=>{
@@ -58,10 +58,10 @@ export default function AdminClient({initial}:{initial:Item[]}){
     <a href="/">← На сайт</a>
    </aside>
    <section className="admin-main">
-    <header className="admin-page-head"><div><span className="eyebrow">УПРАВЛЕНИЕ САЙТОМ</span><h1>{isKind()?labels[section]:section==='accounts'?'Аккаунты и роли':section==='logs'?'Последние действия':'Версии проекта'}</h1></div></header>
+    <header className="admin-page-head"><div><span className="eyebrow">УПРАВЛЕНИЕ САЙТОМ</span><h1>{isKind(section)?labels[section]:section==='accounts'?'Аккаунты и роли':section==='logs'?'Последние действия':'Версии проекта'}</h1></div></header>
     {msg&&<div className="notice">{msg}</div>}
 
-    {isKind()&&<div className="admin-split">
+    {isKind(section)&&<div className="admin-split">
       <div className="admin-list panel">
        <div className="panel-head"><h2>{labels[section]}</h2><button className="primary" onClick={()=>{setEditId(null);setForm(empty(section))}}>＋ Новый</button></div>
        {items.filter(x=>x.kind===section).map(x=><article className="admin-row" key={x.id}>

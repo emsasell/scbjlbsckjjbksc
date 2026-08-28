@@ -59,7 +59,15 @@ export async function POST(req:Request){
         minecraft_bedrock:String(x.minecraft_bedrock||'').trim()
       };
       if(!values.app_version)return NextResponse.json({error:'Введите версию сайта'},{status:400});
-      for(const [key,value] of Object.entries(values)){
+      const settingPairs: Array<[string,string]> = [
+        ['app_version', values.app_version],
+        ['app_description', values.app_description],
+        ['minecraft_java', values.minecraft_java],
+        ['minecraft_bedrock', values.minecraft_bedrock]
+      ];
+      for(const pair of settingPairs){
+        const key = pair[0];
+        const value = pair[1];
         await db`INSERT INTO settings(key,value,updated_at) VALUES(${key},${value},NOW())
           ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=NOW()`;
       }
