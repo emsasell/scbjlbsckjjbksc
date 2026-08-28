@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
-import { isAdmin } from '../../../lib/auth';
+import { sessionUser } from '../../../lib/auth';
 
 export const runtime = 'nodejs';
 
 export async function POST(req:Request){
- if(!(await isAdmin())) return NextResponse.json({error:'Сессия администратора истекла. Выйдите и войдите в /admin заново.'},{status:401});
+ const user=await sessionUser(); if(!user) return NextResponse.json({error:'Войдите в аккаунт для загрузки файлов.'},{status:401}); if(!(user.owner||user.is_admin||user.is_creator)) return NextResponse.json({error:'У этого аккаунта нет права загружать файлы.'},{status:403});
  const token=process.env.BLOB_READ_WRITE_TOKEN;
  if(!token) return NextResponse.json({error:'BLOB_READ_WRITE_TOKEN не подключён к этому Vercel Project.'}, {status:503});
  try{

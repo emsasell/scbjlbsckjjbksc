@@ -1,9 +1,2 @@
-'use client';
-import {useEffect,useState} from 'react';
-export default function Create(){
- const [user,setUser]=useState<any>(null),[login,setLogin]=useState(''),[password,setPassword]=useState(''),[title,setTitle]=useState(''),[body,setBody]=useState(''),[image_url,setImage]=useState(''),[msg,setMsg]=useState('');
- const check=async()=>{const r=await fetch('/api/submissions');if(r.ok){setUser({ok:true});}else setUser(null)};useEffect(()=>{check()},[]);
- const signIn=async(e:React.FormEvent)=>{e.preventDefault();const r=await fetch('/api/account/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({login,password})});const j=await r.json().catch(()=>({}));if(!r.ok){setMsg(j.error||'Ошибка входа');return}setUser(j.user);setMsg('Вход выполнен')};
- const submit=async(e:React.FormEvent)=>{e.preventDefault();const r=await fetch('/api/submissions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,body,image_url})});const j=await r.json().catch(()=>({}));setMsg(r.ok?'Отправлено. Статус публикации зависит от роли.':j.error||'Ошибка');if(r.ok){setTitle('');setBody('');setImage('')}};
- return <main className="login"><div className="login-card create-card"><span className="eyebrow">MEGAMINE</span><h1>Создание новости</h1><p>Для создателя района публикация отправляется на одобрение. Администратор может публиковать напрямую.</p>{!user?<form onSubmit={signIn}><input placeholder="Логин" value={login} onChange={e=>setLogin(e.target.value)}/><input type="password" placeholder="Пароль" value={password} onChange={e=>setPassword(e.target.value)}/><button>Войти</button></form>:<form onSubmit={submit}><input required placeholder="Название новости" value={title} onChange={e=>setTitle(e.target.value)}/><textarea required placeholder="Текст новости" value={body} onChange={e=>setBody(e.target.value)}/><input placeholder="URL изображения (необязательно)" value={image_url} onChange={e=>setImage(e.target.value)}/><button>Отправить</button></form>}{msg&&<div className="notice">{msg}</div>}<a href="/">← На сайт</a></div></main>
-}
+import CreateClient from '@/components/CreateClient';
+export default function CreatePage(){return <CreateClient/>}

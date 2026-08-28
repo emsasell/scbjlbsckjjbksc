@@ -9,6 +9,7 @@ export async function ensureSchema(){if(!db)return;
  await db`ALTER TABLE content ADD COLUMN IF NOT EXISTS video_title TEXT`;
  await db`ALTER TABLE content ADD COLUMN IF NOT EXISTS video_description TEXT`;
  await db`ALTER TABLE content ADD COLUMN IF NOT EXISTS video_preview TEXT`;
+ await db`ALTER TABLE content ADD COLUMN IF NOT EXISTS minecraft_version TEXT`;
  await db`CREATE TABLE IF NOT EXISTS admins (id BIGSERIAL PRIMARY KEY,username TEXT UNIQUE NOT NULL,password_hash TEXT NOT NULL,display_name TEXT NOT NULL DEFAULT '',session_version INTEGER NOT NULL DEFAULT 1,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`;
  await db`ALTER TABLE admins ADD COLUMN IF NOT EXISTS session_version INTEGER NOT NULL DEFAULT 1`;
  await db`ALTER TABLE admins ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'admin'`;
