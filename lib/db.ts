@@ -26,4 +26,5 @@ export async function ensureSchema(){if(!db)return;
  await db`CREATE TABLE IF NOT EXISTS creators (id BIGSERIAL PRIMARY KEY,nickname TEXT UNIQUE NOT NULL,body TEXT NOT NULL DEFAULT '',avatar_url TEXT,url TEXT,district_id BIGINT,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`;
  await db`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY,value TEXT NOT NULL,updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`;
  await db`CREATE TABLE IF NOT EXISTS action_log (id BIGSERIAL PRIMARY KEY,username TEXT NOT NULL,action TEXT NOT NULL,details TEXT NOT NULL DEFAULT '',created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`;
+ await db`CREATE TABLE IF NOT EXISTS site_updates (id BIGSERIAL PRIMARY KEY,version TEXT NOT NULL,title TEXT NOT NULL DEFAULT '',description TEXT NOT NULL DEFAULT '',update_date DATE,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`;
 }

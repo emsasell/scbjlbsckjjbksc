@@ -8,12 +8,13 @@ export async function GET(){
  if(!(await isAdmin()))return bad();
  if(!db)return NextResponse.json({logs:[],settings:{},broadcasts:[]});
  await ensureSchema();
- const [logs,settingsRows,broadcasts]=await Promise.all([
-  db`SELECT * FROM action_log ORDER BY created_at DESC LIMIT 10`,
+ const [logs,settingsRows,broadcasts,updates]=await Promise.all([
+  db`SELECT * FROM action_log ORDER BY created_at DESC LIMIT 500`,
   db`SELECT key,value FROM settings WHERE key IN ('app_version','app_description','megamine_date') ORDER BY key`,
-  db`SELECT * FROM broadcasts ORDER BY created_at DESC LIMIT 50`
+  db`SELECT * FROM broadcasts ORDER BY created_at DESC LIMIT 50`,
+  db`SELECT * FROM site_updates ORDER BY COALESCE(update_date,created_at::date) DESC, id DESC LIMIT 100`
  ]);
- return NextResponse.json({logs,settings:Object.fromEntries(settingsRows.map((x:any)=>[String(x.key),String(x.value)])),broadcasts});
+ return NextResponse.json({logs,settings:Object.fromEntries(settingsRows.map((x:any)=>[String(x.key),String(x.value)])),broadcasts,updates});
 }
 export async function POST(req:Request){
  if(!(await isAdmin()))return bad();if(!db)return NextResponse.json({error:'DATABASE_URL не настроен'},{status:503});await ensureSchema();
@@ -21,12 +22,16 @@ export async function POST(req:Request){
  try{
   if(x.type==='settings'){
    const v={app_version:String(x.app_version||'').trim(),app_description:String(x.app_description||'').trim(),megamine_date:String(x.megamine_date||'').trim()};
+   const updateTitle=String(x.update_title||'').trim();
+   const updateDate=String(x.update_date||'').trim();
    if(!v.app_version)return NextResponse.json({error:'Введите версию сайта'},{status:400});
    if(v.megamine_date&&!/^\d{4}-\d{2}-\d{2}$/.test(v.megamine_date))return NextResponse.json({error:'Некорректная дата'},{status:400});
    await setSettings(v);
+   if(v.app_version || updateTitle || v.app_description){await db`INSERT INTO site_updates(version,title,description,update_date) VALUES(${v.app_version},${updateTitle||('Обновление '+v.app_version)},${v.app_description},${updateDate||null})`;await logAction('Добавлено обновление сайта',`${v.app_version}: ${updateTitle||v.app_description||'без описания'}`)}
    if(String(x.new_password||'')){await setAdminPassword(String(x.new_password));await logAction('Изменён пароль админ-панели','Все старые сессии завершены')}else await logAction('Изменены настройки сайта',`Версия ${v.app_version}; дата ${v.megamine_date||'автоматическая'}`);
    return NextResponse.json({ok:true});
   }
+  if(x.type==='clear_logs'){await db`DELETE FROM action_log`;await logAction('Журнал действий очищен','Все предыдущие записи удалены');return NextResponse.json({ok:true});}
   if(x.type==='broadcast'){
    const title=String(x.title||'').trim(),body=String(x.body||'').trim();if(!title)return NextResponse.json({error:'Введите заголовок рассылки'},{status:400});
    await db`INSERT INTO broadcasts(title,body,active) VALUES(${title},${body},${asBool(x.active)})`;await logAction('Создана рассылка',title);return NextResponse.json({ok:true});
@@ -41,5 +46,6 @@ export async function PUT(req:Request){
 export async function DELETE(req:Request){
  if(!(await isAdmin()))return bad();if(!db)return NextResponse.json({error:'DATABASE_URL не настроен'},{status:503});await ensureSchema();const x=await req.json().catch(()=>({}));
  if(x.type==='broadcast'){await db`DELETE FROM broadcasts WHERE id=${Number(x.id)}`;await logAction('Удалена рассылка',String(x.id));return NextResponse.json({ok:true})}
+ if(x.type==='update'){await db`DELETE FROM site_updates WHERE id=${Number(x.id)}`;await logAction('Удалена запись обновления',String(x.id));return NextResponse.json({ok:true})}
  return NextResponse.json({error:'Неизвестный тип'},{status:400});
 }

@@ -42,3 +42,29 @@
 .item-links h3{margin:0 0 10px}.item-links-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
 .item-link-card{overflow:hidden;border:1px solid rgba(120,180,150,.25);border-radius:14px;background:rgba(5,25,17,.55)}
 .item-link-card img{width:100%;height:120px;object-fit:cover;display:block}.item-link-card>div{padding:12px}.item-link-card p{margin:7px 0;color:#b7c4bd}.item-link-card a{display:inline-block;margin-top:5px}
+
+/* 8.9.3 — единый вид кнопок и ссылок */
+button{border:0;background:none;color:inherit}
+.editor button,.extra-links button,.card-actions button,.footer-actions button,.links-cards a,.item-link-card a{font-family:inherit;font-weight:800;border-radius:10px;transition:.18s ease}
+.extra-links{margin:18px 0;padding:18px;border:1px solid #294937;border-radius:16px;background:linear-gradient(145deg,#0d2117,#09150f);display:grid;gap:10px}
+.extra-links>b{font-size:18px;color:#f0f6ef}.extra-links>small{color:#9caf9f;line-height:1.55;font-size:13px}
+.extra-links>button{justify-self:start;background:var(--green);color:#08200d;padding:11px 15px;border:0;border-radius:10px;box-shadow:0 8px 20px #65e47d20}
+.extra-links>button:hover{transform:translateY(-1px);background:#83ee96}
+.extra-link-card{background:#0a1710;border-color:#294937;padding:14px;gap:10px}
+.extra-link-card .extra-link-row{grid-template-columns:1fr 1fr;gap:10px;margin:0}
+.extra-link-card input,.extra-link-card textarea{background:#07110d;border:1px solid #294937;color:#f0f6ef;border-radius:9px;padding:11px}
+.extra-link-card label{color:#b9cbbd;font-size:12px;display:grid;gap:7px}.extra-link-card input[type=file]{padding:8px}
+.extra-link-card .danger{justify-self:start;background:#2a1515!important;border:1px solid #6a3030!important;color:#ffb6b6!important;padding:9px 12px!important}
+.extra-link-card .media-state{margin:0}
+
+.card-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}.card-actions button{padding:10px 13px;background:var(--green);color:#08200d;border:1px solid transparent}.card-actions button.secondary{background:#12261a;color:#b9f2c1;border-color:#315139}.card-actions button:hover{transform:translateY(-1px);filter:brightness(1.06)}
+.material-card{display:flex;flex-direction:column}.material-card .news-body,.material-card>div:last-child{flex:1;display:flex;flex-direction:column}.material-card .card-actions{margin-top:auto}.district-version{display:block;color:var(--green);margin-top:12px;font-size:12px}.district-actions{margin-top:15px}
+.news-card,.district-card{cursor:default}.news-card:hover,.district-card:hover{transform:translateY(-4px)}
+
+.links-modal{width:min(980px,100%);padding:28px;background:linear-gradient(145deg,#0d2117,#09150f)}.links-modal>h2{margin:0 0 20px;font-size:30px}.links-cards{grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}.link-card{background:#0a1710;border:1px solid #294937;border-radius:16px;padding:0;overflow:hidden;display:flex;flex-direction:column}.link-card img{height:155px;border-radius:0}.link-card h3,.link-card p{padding:0 16px}.link-card h3{margin:16px 0 4px;font-size:18px}.link-card p{margin:0;color:#aabaae;line-height:1.55}.link-card a{margin:16px;padding:11px 13px;background:var(--green);color:#08200d;border-radius:10px;text-decoration:none;text-align:center}.link-card a:hover{background:#83ee96}
+.item-links{margin-top:26px;padding-top:20px}.item-links h3{font-size:20px}.item-link-card{border-color:#315139;background:#0a1710;box-shadow:0 10px 25px #0002}.item-link-card img{height:140px}.item-link-card>div{padding:15px}.item-link-card b{font-size:16px}.item-link-card a{padding:9px 11px;background:#17301e;border:1px solid #315139;color:#b9f2c1;border-radius:9px;text-decoration:none}.item-link-card a:hover{background:#214126}
+.footer-actions{display:flex;gap:10px;align-items:center}.footer-actions a,.footer-actions button{margin:0;padding:10px 14px;border-radius:10px;border:1px solid #315139;background:#102219;color:#c9ddcc;text-decoration:none}.footer-actions button{font-weight:800}.footer-actions a:hover,.footer-actions button:hover{background:#17301e;color:#fff}
+@media(max-width:700px){.extra-link-card .extra-link-row{grid-template-columns:1fr}.card-actions{flex-direction:column}.card-actions button{width:100%}.footer-actions{flex-wrap:wrap;justify-content:center}.links-modal{padding:20px}.links-cards{grid-template-columns:1fr}}
+
+/* 8.9.4 updates and audit log */
+.updates-preview{margin:24px auto;max-width:1180px;padding:24px;border:1px solid rgba(255,255,255,.12);border-radius:18px;display:flex;gap:24px;justify-content:space-between;align-items:center;background:rgba(255,255,255,.04)}.updates-preview h2{margin:6px 0}.updates-preview p{margin:0;opacity:.8}.updates-list{display:grid;gap:12px;margin-top:18px;max-height:65vh;overflow:auto}.update-card{padding:16px;border:1px solid rgba(255,255,255,.12);border-radius:14px}.update-card h3{margin:6px 0}.update-card p{white-space:pre-wrap}.button-link{display:inline-flex;align-items:center;padding:10px 14px;border-radius:10px;text-decoration:none;border:1px solid currentColor}@media(max-width:700px){.updates-preview{margin:16px;align-items:flex-start;flex-direction:column}}
