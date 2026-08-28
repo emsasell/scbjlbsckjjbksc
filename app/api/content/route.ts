@@ -9,7 +9,7 @@ function normalizeUrl(v:any){return cleanText(v).replace(/\/$/,'').toLowerCase()
 function validUrl(v:string){ if(!v) return true; try{const u=new URL(v);return u.protocol==='http:'||u.protocol==='https:'}catch{return false} }
 function normalizeLinks(value:any){
  const raw=Array.isArray(value)?value:[];
- const links=raw.map((x:any)=>({title:cleanText(x?.title),url:cleanText(x?.url)})).filter((x:any)=>x.title||x.url);
+ const links=raw.map((x:any)=>({title:cleanText(x?.title),description:String(x?.description||'').trim(),image_url:cleanText(x?.image_url)||null,url:cleanText(x?.url)})).filter((x:any)=>x.title||x.url||x.description||x.image_url);
  if(links.some((x:any)=>!x.title||!x.url)) throw new Error('У каждой дополнительной ссылки должны быть заполнены название и URL.');
  if(links.some((x:any)=>!validUrl(x.url))) throw new Error('Укажите корректный URL ссылки, начинающийся с http:// или https://.');
  const seen=new Set<string>();
