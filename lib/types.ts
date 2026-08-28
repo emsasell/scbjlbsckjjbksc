@@ -8,4 +8,4 @@ export type Creator={id:number;nickname:string;description:string;avatar_url:str
 export type ActionLog={id:number;action:string;details:string;actor:string;created_at:string};
 export type AdminUser={id:number;login:string;role:'admin'|'district'|'user';can_admin:boolean;creator_id:number|null;created_at:string};
 
-export type User={id:number;login:string;display_name:string|null;role:'admin'|'district'|'user';district_id:number|null;created_at:string;updated_at?:string};
+export type User={id:number;login:string;display_name:string|null;role:'admin'|'district'|'user';can_admin:boolean;district_id:number|null;created_at:string;updated_at?:string};
