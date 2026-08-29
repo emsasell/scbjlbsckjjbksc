@@ -25,8 +25,11 @@ export async function POST(req:Request){
    const v={app_version:String(x.app_version||'').trim(),app_description:String(x.app_description||'').trim(),megamine_date:String(x.megamine_date||'').trim(),current_update_title:String(x.current_update_title||'').trim(),current_update_date:String(x.current_update_date||'').trim()};
    if(!v.app_version)return NextResponse.json({error:'Введите версию сайта'},{status:400});
    for(const dateValue of [v.megamine_date,v.current_update_date]) if(dateValue&&!/^\d{4}-\d{2}-\d{2}$/.test(dateValue))return NextResponse.json({error:'Некорректная дата'},{status:400});
+   const beforeRows=await db`SELECT key,value FROM settings WHERE key IN ('app_version','app_description','megamine_date','current_update_title','current_update_date')`;
+   const before=Object.fromEntries(beforeRows.map((r:any)=>[String(r.key),String(r.value)]));
    await setSettings(v);
-   if(String(x.new_password||'')){await setAdminPassword(String(x.new_password));await logAction('Изменён пароль админ-панели','Все старые сессии завершены')}else await logAction('Изменены настройки сайта',`Версия ${v.app_version}; дата MegaMine ${v.megamine_date||'автоматическая'}; дата обновления ${v.current_update_date||'не указана'}`);
+   const changed=Object.entries(v).filter(([k,value])=>String(before[k]??'')!==String(value)).map(([k])=>({app_version:'версия',app_description:'описание обновления',megamine_date:'дата MegaMine',current_update_title:'название текущего обновления',current_update_date:'дата обновления'} as Record<string,string>)[k]||k);
+   if(String(x.new_password||'')){await setAdminPassword(String(x.new_password));await logAction('Изменён пароль админ-панели',`Изменены настройки: ${changed.join(', ')||'нет'}; все старые сессии завершены`)}else await logAction('Изменены настройки сайта',`Изменено: ${changed.join(', ')||'нет изменений'}; версия ${v.app_version}`);
    return NextResponse.json({ok:true});
   }
   if(x.type==='clear_logs'){const countRows=await db`SELECT COUNT(*)::int AS count FROM action_log`;const count=Number(countRows[0]?.count||0);await db`DELETE FROM action_log`;await logAction('Журнал действий очищен',`Удалено записей: ${count}`);return NextResponse.json({ok:true});}

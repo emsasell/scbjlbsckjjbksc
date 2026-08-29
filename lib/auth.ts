@@ -35,7 +35,13 @@ export async function currentAdmin():Promise<SessionUser|null>{
 export async function isAdmin(){return !!(await currentAdmin())}
 export function adminCookie(user:SessionUser){return {name:COOKIE,value:encode(user),httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'lax' as const,path:'/',maxAge:60*60*24*7}}
 export function clearAdminCookie(){return {name:COOKIE,value:'',httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'lax' as const,path:'/',maxAge:0}}
-export async function logAction(action:string,details=''){if(db){try{await ensureSchema();await db`INSERT INTO action_log(username,action,details) VALUES('admin',${action},${details})`}catch{}}}
+export async function logAction(action:string,details=''){
+  // Журнал является постоянной частью БД: успешное действие не должно
+  // молча исчезать из истории.
+  if(!db)return;
+  await ensureSchema();
+  await db`INSERT INTO action_log(username,action,details) VALUES('admin',${String(action)},${String(details)})`;
+}
 export const passwordHash=hash;
 export async function setAdminPassword(password:string){if(!db)throw new Error('Для смены пароля нужен DATABASE_URL');if(String(password).length<4)throw new Error('Пароль должен содержать минимум 4 символа');await ensureSchema();const cfg=await adminConfig();const next=cfg.version+1;await db`INSERT INTO settings(key,value,updated_at) VALUES('admin_password_hash',${hash(password)},NOW()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=NOW()`;await db`INSERT INTO settings(key,value,updated_at) VALUES('admin_session_version',${String(next)},NOW()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=NOW()`;return next}
 export async function validAdminPassword(password:string=''){return !!(await authenticate(password))}

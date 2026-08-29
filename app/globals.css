@@ -226,3 +226,23 @@ main{min-width:0}
 @media(max-width:1050px){.links-cards{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
 @media(max-width:760px){.links-cards{grid-template-columns:repeat(2,minmax(0,1fr))!important}.link-card.district-link-card>img{height:150px!important}}
 @media(max-width:520px){.links-cards{grid-template-columns:1fr!important}.link-card.district-link-card>img{height:190px!important}}
+
+/* FIX 8.9.6.4 — единая компактная сетка и изображения без обрезания */
+:root{color-scheme:dark}
+.hero{max-width:1240px!important;grid-template-columns:minmax(0,1fr) minmax(340px,500px)!important;gap:42px!important}
+.hero-avatar{isolation:isolate}.hero-avatar>img{object-fit:cover!important;border-radius:28px!important}.hero-avatar:before{filter:blur(42px)!important;opacity:.8}
+.news-grid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))!important}
+.district-grid{grid-template-columns:repeat(auto-fill,minmax(250px,280px))!important;justify-content:start!important}
+.district-card{height:auto!important;min-height:0!important}
+.news-card>img,.district-card>img,.tab-material>img,.item-link-card img,.link-card.district-link-card>img{object-fit:contain!important;background:#08130d!important}
+.district-card>img{height:180px!important}
+.tab-materials-list{grid-template-columns:repeat(auto-fill,minmax(250px,300px))!important;justify-content:start!important}
+.tab-material{grid-template-columns:1fr!important;min-height:0!important}
+.tab-material>img{width:100%!important;height:180px!important;object-fit:contain!important;background:#08130d!important}
+.links-cards{grid-template-columns:repeat(auto-fill,minmax(250px,280px))!important;justify-content:start!important}
+.link-card.district-link-card>img{height:150px!important;object-fit:contain!important}
+.long-card{display:block!important;overflow:visible!important;background:transparent!important;border:0!important}
+.long-card>img{width:100%!important;max-height:420px!important;height:auto!important;min-height:0!important;object-fit:contain!important;border:1px solid var(--line);border-radius:18px;background:#08130d}
+.long-card>div{padding:0!important;margin-top:20px!important}
+@media(max-width:900px){.hero{grid-template-columns:1fr!important}.hero-avatar{justify-content:center!important}.hero-avatar{order:-1}.district-grid,.tab-materials-list,.links-cards{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))!important}}
+@media(max-width:600px){.district-grid,.tab-materials-list,.links-cards{grid-template-columns:1fr!important}.hero{padding-left:18px!important;padding-right:18px!important}}
