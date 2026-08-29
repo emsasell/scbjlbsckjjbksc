@@ -40,7 +40,8 @@ export async function logAction(action:string,details=''){
   // молча исчезать из истории.
   if(!db)return;
   await ensureSchema();
-  await db`INSERT INTO action_log(username,action,details) VALUES('admin',${String(action)},${String(details)})`;
+  // Явно записываем каждое успешное действие. Схема мигрируется в ensureSchema().
+  await db`INSERT INTO action_log(username,action,details,created_at) VALUES('admin',${String(action)},${String(details)},NOW())`;
 }
 export const passwordHash=hash;
 export async function setAdminPassword(password:string){if(!db)throw new Error('Для смены пароля нужен DATABASE_URL');if(String(password).length<4)throw new Error('Пароль должен содержать минимум 4 символа');await ensureSchema();const cfg=await adminConfig();const next=cfg.version+1;await db`INSERT INTO settings(key,value,updated_at) VALUES('admin_password_hash',${hash(password)},NOW()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=NOW()`;await db`INSERT INTO settings(key,value,updated_at) VALUES('admin_session_version',${String(next)},NOW()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=NOW()`;return next}

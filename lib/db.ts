@@ -28,6 +28,17 @@ export async function ensureSchema(){if(!db)return;
  await db`ALTER TABLE admins ADD COLUMN IF NOT EXISTS url TEXT`;
  await db`CREATE TABLE IF NOT EXISTS creators (id BIGSERIAL PRIMARY KEY,nickname TEXT UNIQUE NOT NULL,body TEXT NOT NULL DEFAULT '',avatar_url TEXT,url TEXT,district_id BIGINT,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`;
  await db`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY,value TEXT NOT NULL,updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`;
- await db`CREATE TABLE IF NOT EXISTS action_log (id BIGSERIAL PRIMARY KEY,username TEXT NOT NULL,action TEXT NOT NULL,details TEXT NOT NULL DEFAULT '',created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`;
+ await db`CREATE TABLE IF NOT EXISTS action_log (id BIGSERIAL PRIMARY KEY,username TEXT NOT NULL DEFAULT 'admin',action TEXT NOT NULL DEFAULT '',details TEXT NOT NULL DEFAULT '',created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`;
+ // Миграция старых баз: CREATE TABLE IF NOT EXISTS не добавляет новые колонки.
+ await db`ALTER TABLE action_log ADD COLUMN IF NOT EXISTS username TEXT`;
+ await db`ALTER TABLE action_log ADD COLUMN IF NOT EXISTS action TEXT`;
+ await db`ALTER TABLE action_log ADD COLUMN IF NOT EXISTS details TEXT`;
+ await db`ALTER TABLE action_log ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`;
+ await db`UPDATE action_log SET username='admin' WHERE username IS NULL OR BTRIM(username)=''`;
+ await db`UPDATE action_log SET action='Неизвестное действие' WHERE action IS NULL`;
+ await db`UPDATE action_log SET details='' WHERE details IS NULL`;
+ await db`ALTER TABLE action_log ALTER COLUMN username SET DEFAULT 'admin'`;
+ await db`ALTER TABLE action_log ALTER COLUMN action SET DEFAULT ''`;
+ await db`ALTER TABLE action_log ALTER COLUMN details SET DEFAULT ''`;
  await db`CREATE TABLE IF NOT EXISTS site_updates (id BIGSERIAL PRIMARY KEY,version TEXT NOT NULL,title TEXT NOT NULL DEFAULT '',description TEXT NOT NULL DEFAULT '',update_date DATE,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`;
 }
