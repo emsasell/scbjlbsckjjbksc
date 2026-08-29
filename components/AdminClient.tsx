@@ -3,6 +3,8 @@ import {useEffect,useMemo,useRef,useState} from 'react';
 import type {Item,ActionLog} from '@/lib/types';
 type Kind=Item['kind'];
 type Section=Kind|'broadcasts'|'settings'|'updates'|'logs';
+function mediaSrc(url:any){const value=String(url||'');if(!value)return '';try{const u=new URL(value);if(/(^|\.)blob\.vercel-storage\.com$/i.test(u.hostname))return '/api/media?url='+encodeURIComponent(value)}catch{}return value;}
+
 const labels:Record<Kind,string>={news:'Новости',district:'Районы',tab:'Вкладки',link:'Ссылки',video:'Видео'};
 const sections:{id:Section;label:string}[]=[
  {id:'news',label:'📰 Новости'},{id:'district',label:'🏘️ Районы'},{id:'tab',label:'📑 Вкладки'},
@@ -49,7 +51,7 @@ export default function AdminClient({initial}:{initial:Item[]}){
  {section==='logs'&&<div className="panel admin-list"><div className="panel-head"><div><h2>Журнал действий</h2><p className="muted">Все доступные записи (до 500 последних), с временем MegaMine UTC+4.</p></div><button className="danger" onClick={async()=>{if(!confirm('Очистить весь журнал действий? Это нельзя отменить.'))return;const r=await fetch('/api/admin/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'clear_logs'})});if(!r.ok){const j=await r.json().catch(()=>({}));setMsg(j.error||'Не удалось очистить журнал')}else{setMsg('Журнал очищен');await load()}}}>🗑️ Очистить журнал</button></div>{(data.logs||[]).map((l:ActionLog)=><article className="admin-row" key={l.id}><div><b>{l.action}</b><small>{l.username} — {l.details}</small></div><time>{new Date(new Date(l.created_at).getTime()+4*3600e3).toISOString().replace('T',' ').slice(0,19)}</time></article>)}{!(data.logs||[]).length&&<p className="empty-mini">Действий пока нет.</p>}</div>}
  </section></main>
 }
-function MediaState({label,url,video=false}:{label:string;url:string;video?:boolean}){return <div className="media-state"><b>{label}</b><a href={url} target="_blank" rel="noreferrer">Открыть файл ↗</a>{!video&&<img src={url} alt="Загружено"/>}</div>}
+function MediaState({label,url,video=false}:{label:string;url:string;video?:boolean}){return <div className="media-state"><b>{label}</b><a href={url} target="_blank" rel="noreferrer">Открыть файл ↗</a>{!video&&<img src={mediaSrc(url)} alt="Загружено"/>}</div>}
 function parseExtraLinks(value:any):any[]{if(Array.isArray(value))return value;if(typeof value==='string'){try{const parsed=JSON.parse(value);return Array.isArray(parsed)?parsed:[]}catch{return []}}return []}
 function ExtraLinks({value,onChange}:{value:any[];onChange:(v:any[])=>void}){
  const [busy,setBusy]=useState<number|null>(null);
