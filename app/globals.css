@@ -257,3 +257,5 @@ main{min-width:0}
 .clickable-image{cursor:zoom-in}
 
 .media-error{min-height:120px;background:#0a1710;color:#ffb4b4;padding:16px;object-fit:contain!important;border:1px dashed #7d3b3b}.media-state img{max-width:100%;height:auto;object-fit:contain}.district-card>img,.news-card>img{background:#0a1710}.long-card>img{max-width:100%;height:auto;object-fit:contain}
+
+.scheduled-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #24422e}.scheduled-item:first-of-type{margin-top:8px}.scheduled-item>div{display:flex;flex-wrap:wrap;gap:8px}.scheduled-item button{padding:8px 11px;border-radius:9px;border:1px solid #315b3d;background:#10261a;color:#dbe7df;cursor:pointer;font:inherit}.scheduled-item button.primary{background:#6ed181;color:#082312;border-color:#6ed181}@media(max-width:720px){.scheduled-item{align-items:flex-start;flex-direction:column}}

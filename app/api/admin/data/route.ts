@@ -6,16 +6,15 @@ const asBool=(v:any)=>v===true||v==='true'||v===1||v==='1';
 async function setSettings(values:Record<string,string>){for(const [key,value] of Object.entries(values)){await db!`INSERT INTO settings(key,value,updated_at) VALUES(${key},${value},NOW()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=NOW()`}}
 export async function GET(){
  if(!(await isAdmin()))return bad();
- if(!db)return NextResponse.json({logs:[],settings:{},broadcasts:[]});
+ if(!db)return NextResponse.json({settings:{},broadcasts:[]});
  await ensureSchema();
- const [logs,settingsRows,broadcasts,updates]=await Promise.all([
-  db`SELECT * FROM action_log ORDER BY created_at DESC`,
+ const [settingsRows,broadcasts,updates]=await Promise.all([
   db`SELECT key,value FROM settings WHERE key IN ('app_version','app_description','megamine_date','current_update_title','current_update_date') ORDER BY key`,
   db`SELECT * FROM broadcasts ORDER BY created_at DESC LIMIT 50`,
   db`SELECT * FROM site_updates ORDER BY COALESCE(update_date,created_at::date) DESC, id DESC LIMIT 100`
  ]);
  const stored=Object.fromEntries(settingsRows.map((x:any)=>[String(x.key),String(x.value)]));
- return NextResponse.json({logs,settings:{app_version:'1.0.0',app_description:'',megamine_date:'',current_update_title:'',current_update_date:'',...stored},broadcasts,updates});
+ return NextResponse.json({settings:{app_version:'1.0.0',app_description:'',megamine_date:'',current_update_title:'',current_update_date:'',...stored},broadcasts,updates});
 }
 export async function POST(req:Request){
  if(!(await isAdmin()))return bad();if(!db)return NextResponse.json({error:'DATABASE_URL не настроен'},{status:503});await ensureSchema();
@@ -32,7 +31,6 @@ export async function POST(req:Request){
    if(String(x.new_password||'')){await setAdminPassword(String(x.new_password));await logAction('Изменён пароль админ-панели',`Изменены настройки: ${changed.join(', ')||'нет'}; все старые сессии завершены`)}else await logAction('Изменены настройки сайта',`Изменено: ${changed.join(', ')||'нет изменений'}; версия ${v.app_version}`);
    return NextResponse.json({ok:true});
   }
-  if(x.type==='clear_logs'){const countRows=await db`SELECT COUNT(*)::int AS count FROM action_log`;const count=Number(countRows[0]?.count||0);await db`DELETE FROM action_log`;await logAction('Журнал действий очищен',`Удалено записей: ${count}`);return NextResponse.json({ok:true});}
   if(x.type==='update'){
    const version=String(x.version||'').trim(),title=String(x.title||'').trim(),description=String(x.description||'').trim(),updateDate=String(x.update_date||'').trim();
    if(!version||!title||!description||!updateDate)return NextResponse.json({error:'Заполните версию, название, описание и дату записи истории'},{status:400});
