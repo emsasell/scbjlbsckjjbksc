@@ -3,7 +3,7 @@ import {useEffect,useMemo,useRef,useState} from 'react';
 import type {Item,ActionLog} from '@/lib/types';
 type Kind=Item['kind'];
 type Section=Kind|'broadcasts'|'settings'|'updates'|'logs';
-function mediaSrc(url:any){const value=String(url||'');if(!value)return '';try{const u=new URL(value);if(/(^|\.)blob\.vercel-storage\.com$/i.test(u.hostname))return '/api/media?url='+encodeURIComponent(value)}catch{}return value;}
+function mediaSrc(url:any){const value=String(url||'');if(!value)return '';if(value.startsWith('/api/media?url='))return value;try{const u=new URL(value);if(u.hostname.toLowerCase().endsWith('.blob.vercel-storage.com')||u.hostname.toLowerCase()==='blob.vercel-storage.com')return '/api/media?url='+encodeURIComponent(value)}catch{}return value;}
 
 const labels:Record<Kind,string>={news:'Новости',district:'Районы',tab:'Вкладки',link:'Ссылки',video:'Видео'};
 const sections:{id:Section;label:string}[]=[
@@ -26,7 +26,7 @@ export default function AdminClient({initial}:{initial:Item[]}){
  useEffect(()=>{load();const t=setInterval(load,2500);return()=>clearInterval(t)},[]);
  const isKind=(s:Section):s is Kind=>['news','district','tab','link','video'].includes(s);
  const open=(s:Section)=>{setSection(s);setMsg('');if(isKind(s)){setEditId(null);setForm(empty(s))}};
- const upload=async(file:File)=>{setBusy(true);setMsg('Загрузка файла…');try{const fd=new FormData();fd.append('file',file);const r=await fetch('/api/upload',{method:'POST',body:fd}),j=await r.json().catch(()=>({}));if(!r.ok)throw Error(j.error||'Ошибка загрузки');if(!j.url)throw Error('Сервер не вернул ссылку на файл');setMsg('Файл загружен и привязан к материалу. Теперь можно сохранять изменения.');return String(j.url)}catch(e:any){setMsg(e.message||'Ошибка загрузки');return null}finally{setBusy(false)}};
+ const upload=async(file:File)=>{setBusy(true);setMsg('Загрузка файла…');try{const fd=new FormData();fd.append('file',file);const r=await fetch('/api/upload',{method:'POST',body:fd}),j=await r.json().catch(()=>({}));if(!r.ok)throw Error(j.error||'Ошибка загрузки');if(!j.url)throw Error('Сервер не вернул ссылку на файл');setMsg('Файл загружен и привязан к материалу. Теперь можно сохранять изменения.');return String(j.displayUrl||j.url)}catch(e:any){setMsg(e.message||'Ошибка загрузки');return null}finally{setBusy(false)}};
  const saveContent=async(e:React.FormEvent)=>{e.preventDefault();setBusy(true);try{const mode=String((e.nativeEvent as SubmitEvent).submitter?.getAttribute('data-mode')||saveMode);const isTimed=form.kind==='news'||form.kind==='video';let status=form.status||'published';if(isTimed){if(mode==='draft')status='draft';else if(mode==='schedule')status='scheduled';else if(mode==='publish')status='published';}const payload={...form,status,...(editId?{id:editId}:{})};const r=await fetch('/api/content',{method:editId?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),j=await r.json().catch(()=>({}));if(!r.ok)throw Error(j.error||'Ошибка');setMsg(status==='draft'?'Черновик сохранён':status==='scheduled'?'Публикация запланирована':status==='published'?'Материал опубликован':'Изменения сохранены');setEditId(null);setForm(empty(form.kind));await load()}catch(e:any){setMsg(e.message)}finally{setBusy(false)}};
  const edit=(x:Item)=>{setSection(x.kind);setEditId(x.id);setForm({...empty(x.kind),...x,published_at:toMegaInput(x.published_at),extra_links:parseExtraLinks(x.extra_links),tab_posts:parseTabPosts((x as any).tab_posts)})};
  const remove=async(id:number)=>{if(!confirm('Удалить этот элемент?'))return;const r=await fetch('/api/content',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});if(!r.ok){const j=await r.json().catch(()=>({}));setMsg(j.error||'Не удалось удалить')}await load()};
@@ -79,7 +79,7 @@ function ExtraLinks({value,onChange}:{value:any[];onChange:(v:any[])=>void}){
    const r=await fetch('/api/upload',{method:'POST',body:fd});
    const j=await r.json().catch(()=>({}));
    if(!r.ok||!j.url)throw Error(j.error||'Не удалось загрузить изображение');
-   const n=parseExtraLinks(value);n[i]={...n[i],image_url:String(j.url)};onChange(n);
+   const n=parseExtraLinks(value);n[i]={...n[i],image_url:String(j.displayUrl||j.url)};onChange(n);
   }catch(e:any){alert(e.message||'Ошибка загрузки')}finally{setBusy(null)}
  };
  return <section className="extra-links">
@@ -104,7 +104,7 @@ function TabPosts({value,onChange}:{value:any[];onChange:(v:any[])=>void}){
  const [busy,setBusy]=useState<number|null>(null);
  const uploadPostImage=async(file:File,i:number)=>{
   setBusy(i);
-  try{const fd=new FormData();fd.append('file',file);const r=await fetch('/api/upload',{method:'POST',body:fd});const j=await r.json().catch(()=>({}));if(!r.ok||!j.url)throw Error(j.error||'Не удалось загрузить изображение');const n=parseTabPosts(value);n[i]={...n[i],image_url:String(j.url)};onChange(n)}catch(e:any){alert(e.message||'Ошибка загрузки изображения')}finally{setBusy(null)}
+  try{const fd=new FormData();fd.append('file',file);const r=await fetch('/api/upload',{method:'POST',body:fd});const j=await r.json().catch(()=>({}));if(!r.ok||!j.url)throw Error(j.error||'Не удалось загрузить изображение');const n=parseTabPosts(value);n[i]={...n[i],image_url:String(j.displayUrl||j.url)};onChange(n)}catch(e:any){alert(e.message||'Ошибка загрузки изображения')}finally{setBusy(null)}
  };
  return <section className="tab-posts">
   <div className="extra-links-title"><div><b>Новости и материалы во вкладке</b><small>Добавляйте несколько материалов как новости: название, текст и отдельное изображение.</small></div><button type="button" className="primary" onClick={()=>onChange([...parseTabPosts(value),{title:'',body:'',image_url:'',published_at:''}])}>＋ Добавить материал</button></div>

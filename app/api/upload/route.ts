@@ -20,7 +20,8 @@ export async function POST(req:Request){
   // Blob Store подключён в режиме Private. Файл читается сайтом через /api/media.
   const blob=await put(`megamine/${Date.now()}-${safeName}`,file,{access:'private',token,addRandomSuffix:true,contentType:file.type} as any);
   await logAction('Загружен медиафайл', `${file.name} • ${file.type} • ${file.size} байт`);
-  return NextResponse.json({url:blob.url,access:'private',name:file.name,type:file.type,size:file.size});
+  const displayUrl='/api/media?url='+encodeURIComponent(blob.url);
+  return NextResponse.json({url:blob.url,displayUrl,access:'private',name:file.name,type:file.type,size:file.size});
  }catch(error:any){
   console.error('Blob upload failed:',error);
   const raw=String(error?.message||'Не удалось загрузить файл');
