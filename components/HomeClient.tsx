@@ -2,19 +2,22 @@
 import {useEffect,useState} from 'react';import type {Item} from '@/lib/types';
 type Content={news:Item[];districts:Item[];tabs:Item[];links:Item[];videos:Item[]};
 export default function HomeClient({content:initialContent}:{content:Content}){
- const [content,setContent]=useState(initialContent),[active,setActive]=useState('Главная'),[menu,setMenu]=useState(false),[selected,setSelected]=useState<Item|null>(null),[linksOpen,setLinksOpen]=useState(false),[updatesOpen,setUpdatesOpen]=useState(false),[settings,setSettings]=useState<any>({app_version:'',megamine_date:'',broadcasts:[]}),[tick,setTick]=useState(Date.now()),[serverOffset,setServerOffset]=useState(0);
+ const [content,setContent]=useState(initialContent),[active,setActive]=useState('Главная'),[menu,setMenu]=useState(false),[selected,setSelected]=useState<Item|null>(null),[linksOpen,setLinksOpen]=useState(false),[updatesOpen,setUpdatesOpen]=useState(false),[settings,setSettings]=useState<any>({app_version:'',megamine_date:'',broadcasts:[]}),[serverOffset,setServerOffset]=useState<number|null>(null);
  useEffect(()=>{const sync=async()=>{try{const [a,b]=await Promise.all([fetch('/api/content',{cache:'no-store'}),fetch('/api/settings',{cache:'no-store'})]);if(a.ok){const rows:Item[]=await a.json(),now=Date.now();setContent({news:rows.filter(x=>x.kind==='news'&&((x.status||'published')==='published'||((x.status||'')==='scheduled'&&(!x.published_at||new Date(x.published_at).getTime()<=now)))&&(!x.published_at||new Date(x.published_at).getTime()<=now)),districts:rows.filter(x=>x.kind==='district'),tabs:rows.filter(x=>x.kind==='tab'),links:rows.filter(x=>x.kind==='link'),videos:rows.filter(x=>x.kind==='video'&&((x.status||'published')==='published'||((x.status||'')==='scheduled'&&(!x.published_at||new Date(x.published_at).getTime()<=now)))&&(!x.published_at||new Date(x.published_at).getTime()<=now))})}if(b.ok){
    const nextSettings=await b.json();
    setSettings(nextSettings);
-   if(typeof nextSettings.server_now==='number'){
-     // Берём серверное время, чтобы часы MegaMine не зависели от времени/часового пояса устройства.
+   if(typeof nextSettings.server_now==='number'&&Number.isFinite(nextSettings.server_now)){
+     // Храним смещение серверных часов, а не «замораживаем» время при каждом опросе.
+     // Это исключает скачки часов и зависимость от часового пояса браузера.
      setServerOffset(nextSettings.server_now-Date.now());
    }
   }}catch{}};sync();const t=setInterval(sync,2500);return()=>clearInterval(t)},[]);
- useEffect(()=>{const t=setInterval(()=>setTick(Date.now()),1000);return()=>clearInterval(t)},[]);
- const megaNow=clockNow(settings.megamine_date,tick+serverOffset); const tabs=content.tabs;
+ // Если сервер ещё не ответил, используем UTC как временную опору; после ответа
+ // сразу переключаемся на серверное время. Никакой local timezone здесь не используется.
+ const stableServerNow=Date.now()+(serverOffset??0);
+ const megaNow=clockNow(settings.megamine_date,stableServerNow); const tabs=content.tabs;
  return <div className="site-shell"><header className="topbar"><a className="brand" href="#"><img src="/avatar.jpg" alt="MegaMine"/><span>Mega<span>Mine</span></span></a><button className="mobile-menu" onClick={()=>setMenu(!menu)}>☰</button><nav className={menu?'nav open':'nav'}>{['Главная','Новости','Районы','Видео',...tabs.map(t=>t.title)].map(t=><button key={t} className={active===t?'active':''} onClick={()=>{setActive(t);setMenu(false)}}>{t}</button>)}</nav></header>
- <main>{active==='Главная'&&<><section className="hero"><div className="hero-copy"><div className="eyebrow">MINECRAFT BEDROCK • MEGAMINE UTC+4</div><h1>Добро пожаловать<br/><em>в MegaMine</em></h1><p>Живой мир, события, районы, новости и видео проекта.</p><div className="clock-card"><b>{fmtDate(megaNow)}</b><strong>{fmtTime(megaNow)}</strong><span>Дата и время MegaMine • на 1 час позже Москвы</span></div><div className="hero-actions"><button onClick={()=>setActive('Новости')}>Смотреть новости</button><button onClick={()=>setActive('Видео')}>Видео</button><button className="secondary" onClick={()=>setUpdatesOpen(true)}>🆕 Что нового</button></div></div><div className="hero-avatar"><img src="/avatar.jpg" alt="MegaMine"/><div className="pixel-card">MEGAMINE<br/><small>ТОЛЬКО BEDROCK</small></div></div></section>{settings.broadcasts?.length>0&&<section className="broadcast-bar">{settings.broadcasts.map((b:any)=><article key={b.id}><b>📣 {b.title}</b><p>{b.body}</p></article>)}</section>}<section id="updates" className="updates-preview"><div><span className="eyebrow">ОБНОВЛЕНИЕ САЙТА</span><h2>Версия {settings.app_version||'—'}</h2><p>{settings.app_description||'Описание текущего обновления пока не добавлено.'}</p></div><button onClick={()=>setUpdatesOpen(true)}>Посмотреть обновления →</button></section><section className="stats"><div><b>{content.news.length}</b><span>новостей</span></div><div><b>{content.districts.length}</b><span>районов</span></div><div><b>{content.videos.length}</b><span>видео</span></div><div><b>{settings.app_version||'—'}</b><span>версия сайта</span></div></section><section className="section"><div className="section-head"><div><span>01</span><h2>Последние новости</h2></div><button onClick={()=>setActive('Новости')}>Все новости →</button></div><Grid items={content.news.slice(0,3)} onOpen={setSelected} type="news"/></section><section className="section"><div className="section-head"><div><span>02</span><h2>Районы мира</h2></div><button onClick={()=>setActive('Районы')}>Все районы →</button></div><DistrictGrid items={content.districts.slice(0,4)} onOpen={setSelected}/></section></>}{active==='Новости'&&<Page title="Новости" kicker="Хроника MegaMine"><Grid items={content.news} onOpen={setSelected} type="news"/></Page>}{active==='Районы'&&<Page title="Районы" kicker="Карта мира"><DistrictGrid items={content.districts} onOpen={setSelected}/></Page>}{active==='Видео'&&<Page title="Видео" kicker="Видео MegaMine"><Grid items={content.videos} onOpen={setSelected} type="video"/></Page>}{tabs.map(t=>active===t.title&&<Page key={t.id} title={t.title} kicker="Раздел проекта"><article className="long-card">{t.image_url&&<img src={t.image_url} alt=""/>}<div><p>{t.body}</p>{parseExtraLinks(t.extra_links).length>0&&<ItemLinks links={parseExtraLinks(t.extra_links)} />}</div></article></Page>)}</main><footer><p>MegaMine • Только Minecraft Bedrock • {settings.app_version&&'Версия сайта '+settings.app_version}</p><div className="footer-actions"><button onClick={()=>setLinksOpen(true)}>Ссылки</button></div></footer>{linksOpen&&<LinksModal items={content.links} onClose={()=>setLinksOpen(false)}/>} {updatesOpen&&<UpdatesModal settings={settings} onClose={()=>setUpdatesOpen(false)}/>} {selected&&<InfoModal item={selected} onClose={()=>setSelected(null)}/>}</div>
+ <main>{active==='Главная'&&<><section className="hero"><div className="hero-copy"><div className="eyebrow">MINECRAFT BEDROCK • MEGAMINE UTC+4</div><h1>Добро пожаловать<br/><em>в MegaMine</em></h1><p>Живой мир, события, районы, новости и видео проекта.</p><div className="clock-card"><b>{fmtDate(megaNow)}</b><strong>{fmtTime(megaNow)}</strong><span>Дата и время MegaMine</span></div><div className="hero-actions"><button onClick={()=>setActive('Новости')}>Смотреть новости</button><button onClick={()=>setActive('Видео')}>Видео</button><button className="secondary" onClick={()=>setUpdatesOpen(true)}>🆕 Что нового</button></div></div><div className="hero-avatar"><img src="/avatar.jpg" alt="MegaMine"/><div className="pixel-card">MEGAMINE</div></div></section>{settings.broadcasts?.length>0&&<section className="broadcast-bar">{settings.broadcasts.map((b:any)=><article key={b.id}><b>📣 {b.title}</b><p>{b.body}</p></article>)}</section>}<section id="updates" className="updates-preview"><div><span className="eyebrow">ОБНОВЛЕНИЕ САЙТА</span><h2>Версия {settings.app_version||'—'}</h2><p>{settings.app_description||'Описание текущего обновления пока не добавлено.'}</p></div><button onClick={()=>setUpdatesOpen(true)}>Посмотреть обновления →</button></section><section className="stats"><div><b>{content.news.length}</b><span>новостей</span></div><div><b>{content.districts.length}</b><span>районов</span></div><div><b>{content.videos.length}</b><span>видео</span></div><div><b>{settings.app_version||'—'}</b><span>версия сайта</span></div></section><section className="section"><div className="section-head"><div><span>01</span><h2>Последние новости</h2></div><button onClick={()=>setActive('Новости')}>Все новости →</button></div><Grid items={content.news.slice(0,3)} onOpen={setSelected} type="news"/></section><section className="section"><div className="section-head"><div><span>02</span><h2>Районы мира</h2></div><button onClick={()=>setActive('Районы')}>Все районы →</button></div><DistrictGrid items={content.districts.slice(0,4)} onOpen={setSelected}/></section></>}{active==='Новости'&&<Page title="Новости" kicker="Хроника MegaMine"><Grid items={content.news} onOpen={setSelected} type="news"/></Page>}{active==='Районы'&&<Page title="Районы" kicker="Карта мира"><DistrictGrid items={content.districts} onOpen={setSelected}/></Page>}{active==='Видео'&&<Page title="Видео" kicker="Видео MegaMine"><Grid items={content.videos} onOpen={setSelected} type="video"/></Page>}{tabs.map(t=>active===t.title&&<Page key={t.id} title={t.title} kicker="Раздел проекта"><article className="long-card">{t.image_url&&<img src={t.image_url} alt=""/>}<div><p>{t.body}</p>{parseExtraLinks(t.extra_links).length>0&&<ItemLinks links={parseExtraLinks(t.extra_links)} />}</div></article></Page>)}</main><footer><p>MegaMine{settings.app_version&&' • Версия сайта '+settings.app_version}</p><div className="footer-actions"><button onClick={()=>setLinksOpen(true)}>Ссылки</button></div></footer>{linksOpen&&<LinksModal items={content.links} onClose={()=>setLinksOpen(false)}/>} {updatesOpen&&<UpdatesModal settings={settings} onClose={()=>setUpdatesOpen(false)}/>} {selected&&<InfoModal item={selected} onClose={()=>setSelected(null)}/>}</div>
 }
 function normalizedDate(value:any):string{
  const raw=String(value||'').trim();
@@ -24,10 +27,10 @@ function normalizedDate(value:any):string{
  return '';
 }
 function clockNow(dateOverride:string,tick:number){
- // MegaMine всегда работает в UTC+4 (Москва + 1 час).
- // tick уже скорректирован по времени сервера, поэтому локальное время телефона
- // и его часовой пояс не используются для отображения.
- const megaMs=tick+4*60*60*1000;
+ // MegaMine всегда работает строго по UTC+4. Используются UTC-геттеры,
+ // поэтому часовой пояс браузера и устройства не может изменить отображение.
+ const safeTick=Number.isFinite(tick)?tick:Date.now();
+ const megaMs=safeTick+4*60*60*1000;
  const shifted=new Date(megaMs);
  const override=normalizedDate(dateOverride);
  if(!override)return shifted;
@@ -61,7 +64,7 @@ function LinksModal({items,onClose}:{items:Item[];onClose:()=>void}){return <div
 
 function UpdatesModal({settings,onClose}:{settings:any;onClose:()=>void}){
  const updates=Array.isArray(settings.updates)?settings.updates:[];
- const currentDate=updates[0]?.update_date||String(updates[0]?.created_at||'')||'';
+ const currentDate=settings.current_update_date||updates[0]?.update_date||String(updates[0]?.created_at||'')||'';
  return <div className="modal-backdrop" onMouseDown={onClose}>
   <article className="info-modal updates-modal" onMouseDown={e=>e.stopPropagation()}>
    <button className="modal-close" onClick={onClose}>×</button>
@@ -69,7 +72,7 @@ function UpdatesModal({settings,onClose}:{settings:any;onClose:()=>void}){
    <section className="current-update">
     <div className="update-badge">ТЕКУЩАЯ ВЕРСИЯ</div>
     <div className="current-update-main"><div><span>Версия</span><strong>{settings.app_version||'—'}</strong></div><div><span>Дата обновления</span><strong>{formatStoredDate(currentDate)}</strong></div></div>
-    <h3>{updates[0]?.title||'Текущее обновление'}</h3>
+    <h3>{settings.current_update_title||updates[0]?.title||'Текущее обновление'}</h3>
     <p>{settings.app_description||updates[0]?.description||'Описание текущего обновления пока не добавлено.'}</p>
    </section>
    <h3 className="history-title">История версий</h3>

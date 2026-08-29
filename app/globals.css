@@ -93,3 +93,36 @@ button{border:0;background:none;color:inherit}
 .current-update-main{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}.current-update-main>div{padding:14px;border:1px solid #31513a;border-radius:12px;background:#09150f}.current-update-main span{display:block;color:#8fa395;font-size:12px;margin-bottom:5px}.current-update-main strong{font-size:22px;color:#f2f8f2}.current-update h3{margin:0 0 8px;font-size:24px}.current-update p{margin:0;white-space:pre-wrap;line-height:1.65;color:#d4ded5}
 .history-title{margin:26px 0 12px;font-size:21px}.updates-list{display:grid;gap:12px;max-height:none;overflow:visible}.update-card{padding:18px;border:1px solid #294937;border-radius:15px;background:#0a1710}.update-card-top{display:flex;align-items:center;justify-content:space-between;gap:12px}.update-card-top b{color:#b8f4c2}.update-card time{color:#8fa395;font-size:12px}.update-card h3{margin:10px 0 6px}.update-card p{margin:0;white-space:pre-wrap;line-height:1.55;color:#c4d0c6}.updates-empty{padding:20px;border:1px dashed #31513a;border-radius:14px;color:#9fb3a3}
 @media(max-width:700px){.extra-links-title{flex-direction:column}.extra-links-title .primary{width:100%}.extra-link-row,.current-update-main{grid-template-columns:1fr}.updates-modal{padding:20px}.update-card-top{align-items:flex-start;flex-direction:column;gap:4px}}
+
+
+/* FIX 8.9.5.3 — районы без обрезания карточек и изображений */
+.district-grid{
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  align-items:stretch;
+  width:100%;
+}
+.district-card{
+  min-width:0;
+  width:100%;
+  overflow:hidden;
+  border-radius:18px;
+}
+.district-card>img{
+  width:100%;
+  max-width:100%;
+  height:auto;
+  aspect-ratio:16/10;
+  object-fit:cover;
+  display:block;
+}
+.district-card>div{
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+.material-card{
+  min-width:0;
+}
+@media(max-width:800px){
+  .district-grid{grid-template-columns:1fr}
+  .district-card>img{aspect-ratio:16/9}
+}
