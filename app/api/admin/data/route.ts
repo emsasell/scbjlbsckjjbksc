@@ -14,7 +14,8 @@ export async function GET(){
   db`SELECT * FROM broadcasts ORDER BY created_at DESC LIMIT 50`,
   db`SELECT * FROM site_updates ORDER BY COALESCE(update_date,created_at::date) DESC, id DESC LIMIT 100`
  ]);
- return NextResponse.json({logs,settings:Object.fromEntries(settingsRows.map((x:any)=>[String(x.key),String(x.value)])),broadcasts,updates});
+ const stored=Object.fromEntries(settingsRows.map((x:any)=>[String(x.key),String(x.value)]));
+ return NextResponse.json({logs,settings:{app_version:'1.0.0',app_description:'',megamine_date:'',...stored},broadcasts,updates});
 }
 export async function POST(req:Request){
  if(!(await isAdmin()))return bad();if(!db)return NextResponse.json({error:'DATABASE_URL не настроен'},{status:503});await ensureSchema();
@@ -27,7 +28,7 @@ export async function POST(req:Request){
    if(!v.app_version)return NextResponse.json({error:'Введите версию сайта'},{status:400});
    if(v.megamine_date&&!/^\d{4}-\d{2}-\d{2}$/.test(v.megamine_date))return NextResponse.json({error:'Некорректная дата'},{status:400});
    await setSettings(v);
-   if(v.app_version || updateTitle || v.app_description){await db`INSERT INTO site_updates(version,title,description,update_date) VALUES(${v.app_version},${updateTitle||('Обновление '+v.app_version)},${v.app_description},${updateDate||null})`;await logAction('Добавлено обновление сайта',`${v.app_version}: ${updateTitle||v.app_description||'без описания'}`)}
+   if(updateTitle || updateDate){await db`INSERT INTO site_updates(version,title,description,update_date) VALUES(${v.app_version},${updateTitle||('Обновление '+v.app_version)},${v.app_description},${updateDate||null})`;await logAction('Добавлено обновление сайта',`${v.app_version}: ${updateTitle||v.app_description||'без описания'}`)}
    if(String(x.new_password||'')){await setAdminPassword(String(x.new_password));await logAction('Изменён пароль админ-панели','Все старые сессии завершены')}else await logAction('Изменены настройки сайта',`Версия ${v.app_version}; дата ${v.megamine_date||'автоматическая'}`);
    return NextResponse.json({ok:true});
   }

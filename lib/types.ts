@@ -1,7 +1,7 @@
 export type Item={
  id:number; kind:'news'|'district'|'tab'|'link'|'video'; title:string; slug:string; body:string;
  image_url:string|null; video_url:string|null; video_title?:string|null; video_description?:string|null;
- video_preview?:string|null; published_at:string|null; url:string|null; extra_links:{title:string;url:string}[]|string|null;
+ video_preview?:string|null; published_at:string|null; url:string|null; extra_links:{title:string;url:string;description?:string;image_url?:string|null}[]|string|null;
  sort_order:number; status?:'published'|'scheduled'|'pending'|'rejected'; creator_id?:number|null;
  minecraft_version?:string|null; created_at:string; updated_at?:string;
 };

@@ -68,3 +68,28 @@ button{border:0;background:none;color:inherit}
 
 /* 8.9.4 updates and audit log */
 .updates-preview{margin:24px auto;max-width:1180px;padding:24px;border:1px solid rgba(255,255,255,.12);border-radius:18px;display:flex;gap:24px;justify-content:space-between;align-items:center;background:rgba(255,255,255,.04)}.updates-preview h2{margin:6px 0}.updates-preview p{margin:0;opacity:.8}.updates-list{display:grid;gap:12px;margin-top:18px;max-height:65vh;overflow:auto}.update-card{padding:16px;border:1px solid rgba(255,255,255,.12);border-radius:14px}.update-card h3{margin:6px 0}.update-card p{white-space:pre-wrap}.button-link{display:inline-flex;align-items:center;padding:10px 14px;border-radius:10px;text-decoration:none;border:1px solid currentColor}@media(max-width:700px){.updates-preview{margin:16px;align-items:flex-start;flex-direction:column}}
+
+
+/* 8.9.5 — исправление отдельных ссылок и окна обновлений */
+.extra-links{margin:18px 0;padding:18px;border:1px solid #315640;border-radius:18px;background:linear-gradient(145deg,#0d2117,#08140e);display:grid;gap:14px}
+.extra-links-title{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.extra-links-title b{display:block;font-size:20px;color:#eef7ef;margin-bottom:5px}
+.extra-links-title small{display:block;max-width:650px;color:#9fb3a3;line-height:1.55}
+.extra-links-empty{padding:14px;border:1px dashed #3b6248;border-radius:12px;color:#9fb3a3;background:#0a1710}
+.extra-link-card{display:grid;gap:12px;padding:16px;border:1px solid #294a37;border-radius:15px;background:#0a1710}
+.extra-link-number{font-weight:800;color:#9ce9aa}
+.extra-link-row{display:grid;grid-template-columns:1fr 1.2fr;gap:12px}
+.extra-link-card label{display:grid;gap:7px;color:#c4d3c6;font-size:13px}
+.extra-link-card input,.extra-link-card textarea{width:100%;box-sizing:border-box;background:#07110b;color:#fff;border:1px solid #31513a;border-radius:10px;padding:11px;font:inherit}
+.extra-link-media{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.extra-link-card .danger{justify-self:start;border:1px solid #6b3434;background:#261313;color:#ffb2b2;border-radius:9px;padding:9px 12px}
+.media-state{display:grid;gap:8px;padding:10px;border-radius:12px;border:1px solid #31513a;background:#0b1911}
+.media-state a{color:#9fe7aa;font-size:13px}
+.media-state img{width:150px;max-width:100%;height:90px;object-fit:cover;border-radius:8px;border:1px solid #294937}
+.updates-modal{width:min(860px,calc(100vw - 28px));max-height:min(820px,90vh);overflow:auto;padding:30px;background:radial-gradient(circle at 90% 0,#173322 0,transparent 35%),linear-gradient(145deg,#0d2117,#07110b)}
+.updates-header{padding-right:52px}.updates-header h2{margin:7px 0;font-size:clamp(30px,5vw,46px)}.updates-header p{margin:0;color:#9fb3a3}
+.current-update{margin-top:24px;padding:22px;border:1px solid #3b6849;border-radius:18px;background:linear-gradient(145deg,rgba(77,177,100,.14),rgba(8,20,14,.85))}
+.update-badge{display:inline-flex;padding:6px 10px;border-radius:99px;background:#153822;color:#aaf1b7;font-size:11px;font-weight:900;letter-spacing:.08em}
+.current-update-main{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}.current-update-main>div{padding:14px;border:1px solid #31513a;border-radius:12px;background:#09150f}.current-update-main span{display:block;color:#8fa395;font-size:12px;margin-bottom:5px}.current-update-main strong{font-size:22px;color:#f2f8f2}.current-update h3{margin:0 0 8px;font-size:24px}.current-update p{margin:0;white-space:pre-wrap;line-height:1.65;color:#d4ded5}
+.history-title{margin:26px 0 12px;font-size:21px}.updates-list{display:grid;gap:12px;max-height:none;overflow:visible}.update-card{padding:18px;border:1px solid #294937;border-radius:15px;background:#0a1710}.update-card-top{display:flex;align-items:center;justify-content:space-between;gap:12px}.update-card-top b{color:#b8f4c2}.update-card time{color:#8fa395;font-size:12px}.update-card h3{margin:10px 0 6px}.update-card p{margin:0;white-space:pre-wrap;line-height:1.55;color:#c4d0c6}.updates-empty{padding:20px;border:1px dashed #31513a;border-radius:14px;color:#9fb3a3}
+@media(max-width:700px){.extra-links-title{flex-direction:column}.extra-links-title .primary{width:100%}.extra-link-row,.current-update-main{grid-template-columns:1fr}.updates-modal{padding:20px}.update-card-top{align-items:flex-start;flex-direction:column;gap:4px}}
