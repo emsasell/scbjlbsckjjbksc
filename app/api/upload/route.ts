@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
-import { isAdmin } from '../../../lib/auth';
+import { isAdmin, logAction } from '../../../lib/auth';
 
 export const runtime = 'nodejs';
 
@@ -19,6 +19,7 @@ export async function POST(req:Request){
   // Для публичного сайта медиа должны открываться без авторизации.
   // Blob Store подключён в режиме Private. Файл читается сайтом через /api/media.
   const blob=await put(`megamine/${Date.now()}-${safeName}`,file,{access:'private',token,addRandomSuffix:true,contentType:file.type} as any);
+  await logAction('Загружен медиафайл', `${file.name} • ${file.type} • ${file.size} байт`);
   return NextResponse.json({url:blob.url,access:'private',name:file.name,type:file.type,size:file.size});
  }catch(error:any){
   console.error('Blob upload failed:',error);

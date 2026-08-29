@@ -11,8 +11,11 @@ export async function POST(req:Request){
   const body=await req.json(); const kind=String(body.kind||''); const ids=Array.isArray(body.ids)?body.ids.map(Number).filter(Number.isFinite):[];
   if(!allowed.has(kind)||!ids.length)return NextResponse.json({error:'Некорректный порядок'},{status:400});
   const unique=[...new Set(ids)]; if(unique.length!==ids.length)return NextResponse.json({error:'Некорректный список элементов'},{status:400});
+  const rows=await db`SELECT id,title FROM content WHERE kind=${kind} AND id=ANY(${ids})`;
+  if(rows.length!==ids.length)return NextResponse.json({error:'В списке есть элементы не этого типа или удалённые элементы'},{status:400});
   for(let i=0;i<ids.length;i++) await db`UPDATE content SET sort_order=${i*10}, updated_at=NOW() WHERE id=${ids[i]} AND kind=${kind}`;
-  await logAction('Изменён порядок',`${kind}: ${ids.join(', ')}`);
+  const names=ids.map(id=>rows.find((r:any)=>Number(r.id)===id)?.title||String(id));
+  await logAction('Изменён порядок элементов',`${kind}: ${names.join(' → ')}`);
   return NextResponse.json({ok:true});
  }catch(error:any){return NextResponse.json({error:'Не удалось сохранить порядок: '+String(error?.message||'ошибка')},{status:500})}
 }

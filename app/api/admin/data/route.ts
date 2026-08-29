@@ -9,7 +9,7 @@ export async function GET(){
  if(!db)return NextResponse.json({logs:[],settings:{},broadcasts:[]});
  await ensureSchema();
  const [logs,settingsRows,broadcasts,updates]=await Promise.all([
-  db`SELECT * FROM action_log ORDER BY created_at DESC LIMIT 500`,
+  db`SELECT * FROM action_log ORDER BY created_at DESC`,
   db`SELECT key,value FROM settings WHERE key IN ('app_version','app_description','megamine_date','current_update_title','current_update_date') ORDER BY key`,
   db`SELECT * FROM broadcasts ORDER BY created_at DESC LIMIT 50`,
   db`SELECT * FROM site_updates ORDER BY COALESCE(update_date,created_at::date) DESC, id DESC LIMIT 100`
@@ -29,7 +29,7 @@ export async function POST(req:Request){
    if(String(x.new_password||'')){await setAdminPassword(String(x.new_password));await logAction('Изменён пароль админ-панели','Все старые сессии завершены')}else await logAction('Изменены настройки сайта',`Версия ${v.app_version}; дата MegaMine ${v.megamine_date||'автоматическая'}; дата обновления ${v.current_update_date||'не указана'}`);
    return NextResponse.json({ok:true});
   }
-  if(x.type==='clear_logs'){await db`DELETE FROM action_log`;await logAction('Журнал действий очищен','Все предыдущие записи удалены');return NextResponse.json({ok:true});}
+  if(x.type==='clear_logs'){const countRows=await db`SELECT COUNT(*)::int AS count FROM action_log`;const count=Number(countRows[0]?.count||0);await db`DELETE FROM action_log`;await logAction('Журнал действий очищен',`Удалено записей: ${count}`);return NextResponse.json({ok:true});}
   if(x.type==='update'){
    const version=String(x.version||'').trim(),title=String(x.title||'').trim(),description=String(x.description||'').trim(),updateDate=String(x.update_date||'').trim();
    if(!version||!title||!description||!updateDate)return NextResponse.json({error:'Заполните версию, название, описание и дату записи истории'},{status:400});
@@ -62,7 +62,7 @@ export async function PUT(req:Request){
 }
 export async function DELETE(req:Request){
  if(!(await isAdmin()))return bad();if(!db)return NextResponse.json({error:'DATABASE_URL не настроен'},{status:503});await ensureSchema();const x=await req.json().catch(()=>({}));
- if(x.type==='broadcast'){await db`DELETE FROM broadcasts WHERE id=${Number(x.id)}`;await logAction('Удалена рассылка',String(x.id));return NextResponse.json({ok:true})}
- if(x.type==='update'){await db`DELETE FROM site_updates WHERE id=${Number(x.id)}`;await logAction('Удалена запись обновления',String(x.id));return NextResponse.json({ok:true})}
+ if(x.type==='broadcast'){const id=Number(x.id);const before=await db`SELECT title FROM broadcasts WHERE id=${id}`;await db`DELETE FROM broadcasts WHERE id=${id}`;await logAction('Удалена рассылка',before[0]?.title||`ID ${id}`);return NextResponse.json({ok:true})}
+ if(x.type==='update'){const id=Number(x.id);const before=await db`SELECT version,title FROM site_updates WHERE id=${id}`;await db`DELETE FROM site_updates WHERE id=${id}`;await logAction('Удалена запись обновления',before[0]?`${before[0].version}: ${before[0].title}`:`ID ${id}`);return NextResponse.json({ok:true})}
  return NextResponse.json({error:'Неизвестный тип'},{status:400});
 }
