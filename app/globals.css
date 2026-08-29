@@ -126,3 +126,6 @@ button{border:0;background:none;color:inherit}
   .district-grid{grid-template-columns:1fr}
   .district-card>img{aspect-ratio:16/9}
 }
+
+/* Связь вкладок с районами */
+.admin-form select{width:100%;border:1px solid #315c48;background:#0b1b14;color:#eaf4ee;border-radius:12px;padding:13px 14px;font:inherit;outline:none}.admin-form select:focus{border-color:#6ed889;box-shadow:0 0 0 3px rgba(110,216,137,.12)}.linked-district{margin:0 0 16px;padding:12px 14px;border:1px solid #315c48;border-radius:12px;background:#10271b;color:#cde2d4}.linked-district b{color:#7cdd95}
