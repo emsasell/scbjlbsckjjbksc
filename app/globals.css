@@ -153,3 +153,41 @@ button{border:0;background:none;color:inherit}
 .tab-material h4{margin:8px 0;font-size:22px}
 .tab-material p{margin:0;white-space:pre-wrap;line-height:1.65}
 @media(max-width:700px){.tab-material{grid-template-columns:1fr}.tab-material>img{height:190px}.tab-posts{padding:14px}.tab-material>div{padding:16px}}
+
+
+/* 8.9.6.1 — стабильные часы, полные изображения и защита от обрезания макета */
+html,body{max-width:100%;overflow-x:hidden}
+.site-shell{width:100%;max-width:100%;overflow-x:clip}
+main{min-width:0}
+.section,.page,.hero{min-width:0;max-width:100%}
+.news-grid,.district-grid,.tab-materials-list{min-width:0}
+.news-card,.district-card,.tab-material,.long-card{min-width:0}
+.news-card>img,
+.district-card>img,
+.tab-material>img,
+.item-link-card img,
+.link-card img{
+  object-fit:contain!important;
+  background:#08130d;
+  object-position:center;
+}
+.news-card>img,.district-card>img{display:block}
+.long-card{max-width:100%}
+.long-card img{object-fit:contain;background:#08130d;max-width:100%}
+.tab-material{grid-template-columns:minmax(220px,340px) minmax(0,1fr);max-width:100%}
+.tab-material>img{max-width:100%;height:210px}
+.tab-material>div{min-width:0;overflow-wrap:anywhere}
+.tab-material p,.long-card p,.news-body p,.district-card p{overflow-wrap:anywhere}
+@media(max-width:900px){
+  .nav{max-width:100%;overflow-x:auto}
+}
+@media(max-width:700px){
+  .tab-material{grid-template-columns:1fr}
+  .tab-material>img{height:220px;width:100%}
+}
+
+/* Управление порядком материалов и вкладок */
+.order-actions{display:flex;gap:6px}
+.order-actions button{min-width:38px;padding:9px 10px}
+.order-actions button:disabled{opacity:.35;cursor:not-allowed}
+.sort-note{margin:0 0 14px;color:var(--muted);font-size:12px;line-height:1.5}
