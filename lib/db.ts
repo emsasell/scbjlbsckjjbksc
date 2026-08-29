@@ -11,6 +11,7 @@ export async function ensureSchema(){if(!db)return;
  await db`ALTER TABLE content ADD COLUMN IF NOT EXISTS video_preview TEXT`;
  await db`ALTER TABLE content ADD COLUMN IF NOT EXISTS minecraft_version TEXT`;
  await db`ALTER TABLE content ADD COLUMN IF NOT EXISTS district_id BIGINT`;
+ await db`ALTER TABLE content ADD COLUMN IF NOT EXISTS tab_posts JSONB NOT NULL DEFAULT '[]'::jsonb`;
  await db`CREATE INDEX IF NOT EXISTS content_district_id_idx ON content (district_id)`;
  await db`ALTER TABLE content DROP CONSTRAINT IF EXISTS content_kind_check`;
  await db`ALTER TABLE content ADD CONSTRAINT content_kind_check CHECK(kind IN ('news','district','tab','link','video'))`;

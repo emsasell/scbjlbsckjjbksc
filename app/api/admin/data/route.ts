@@ -23,16 +23,21 @@ export async function POST(req:Request){
  try{
   if(x.type==='settings'){
    const v={app_version:String(x.app_version||'').trim(),app_description:String(x.app_description||'').trim(),megamine_date:String(x.megamine_date||'').trim(),current_update_title:String(x.current_update_title||'').trim(),current_update_date:String(x.current_update_date||'').trim()};
-   const updateTitle=String(x.update_title||'').trim();
-   const updateDate=String(x.update_date||'').trim();
    if(!v.app_version)return NextResponse.json({error:'Введите версию сайта'},{status:400});
-   for(const dateValue of [v.megamine_date,v.current_update_date,updateDate]) if(dateValue&&!/^\d{4}-\d{2}-\d{2}$/.test(dateValue))return NextResponse.json({error:'Некорректная дата'},{status:400});
+   for(const dateValue of [v.megamine_date,v.current_update_date]) if(dateValue&&!/^\d{4}-\d{2}-\d{2}$/.test(dateValue))return NextResponse.json({error:'Некорректная дата'},{status:400});
    await setSettings(v);
-   if(updateTitle || updateDate){await db`INSERT INTO site_updates(version,title,description,update_date) VALUES(${v.app_version},${updateTitle||('Обновление '+v.app_version)},${v.app_description},${updateDate||null})`;await logAction('Добавлено обновление сайта',`${v.app_version}: ${updateTitle||v.app_description||'без описания'}`)}
    if(String(x.new_password||'')){await setAdminPassword(String(x.new_password));await logAction('Изменён пароль админ-панели','Все старые сессии завершены')}else await logAction('Изменены настройки сайта',`Версия ${v.app_version}; дата MegaMine ${v.megamine_date||'автоматическая'}; дата обновления ${v.current_update_date||'не указана'}`);
    return NextResponse.json({ok:true});
   }
   if(x.type==='clear_logs'){await db`DELETE FROM action_log`;await logAction('Журнал действий очищен','Все предыдущие записи удалены');return NextResponse.json({ok:true});}
+  if(x.type==='update'){
+   const version=String(x.version||'').trim(),title=String(x.title||'').trim(),description=String(x.description||'').trim(),updateDate=String(x.update_date||'').trim();
+   if(!version||!title||!description||!updateDate)return NextResponse.json({error:'Заполните версию, название, описание и дату записи истории'},{status:400});
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(updateDate))return NextResponse.json({error:'Некорректная дата записи истории'},{status:400});
+   await db`INSERT INTO site_updates(version,title,description,update_date) VALUES(${version},${title},${description},${updateDate}::date)`;
+   await logAction('Создана запись истории обновлений',`${version}: ${title}`);
+   return NextResponse.json({ok:true});
+  }
   if(x.type==='broadcast'){
    const title=String(x.title||'').trim(),body=String(x.body||'').trim();if(!title)return NextResponse.json({error:'Введите заголовок рассылки'},{status:400});
    await db`INSERT INTO broadcasts(title,body,active) VALUES(${title},${body},${asBool(x.active)})`;await logAction('Создана рассылка',title);return NextResponse.json({ok:true});
@@ -42,7 +47,18 @@ export async function POST(req:Request){
 }
 export async function PUT(req:Request){
  if(!(await isAdmin()))return bad();if(!db)return NextResponse.json({error:'DATABASE_URL не настроен'},{status:503});await ensureSchema();const x=await req.json().catch(()=>({}));
- try{if(x.type==='broadcast'){const id=Number(x.id),title=String(x.title||'').trim();if(!id||!title)return NextResponse.json({error:'Некорректные данные рассылки'},{status:400});await db`UPDATE broadcasts SET title=${title},body=${String(x.body||'')},active=${asBool(x.active)},updated_at=NOW() WHERE id=${id}`;await logAction('Изменена рассылка',title);return NextResponse.json({ok:true})}return NextResponse.json({error:'Неизвестный тип'},{status:400})}catch(e:any){return NextResponse.json({error:e?.message||'Ошибка сохранения'},{status:400})}
+ try{
+  if(x.type==='update'){
+   const id=Number(x.id),version=String(x.version||'').trim(),title=String(x.title||'').trim(),description=String(x.description||'').trim(),updateDate=String(x.update_date||'').trim();
+   if(!id||!version||!title||!description||!updateDate)return NextResponse.json({error:'Заполните все поля записи истории'},{status:400});
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(updateDate))return NextResponse.json({error:'Некорректная дата записи истории'},{status:400});
+   const rows=await db`UPDATE site_updates SET version=${version},title=${title},description=${description},update_date=${updateDate}::date WHERE id=${id} RETURNING id`;
+   if(!rows.length)return NextResponse.json({error:'Запись истории не найдена'},{status:404});
+   await logAction('Изменена запись истории обновлений',`${version}: ${title}`);return NextResponse.json({ok:true});
+  }
+  if(x.type==='broadcast'){const id=Number(x.id),title=String(x.title||'').trim();if(!id||!title)return NextResponse.json({error:'Некорректные данные рассылки'},{status:400});await db`UPDATE broadcasts SET title=${title},body=${String(x.body||'')},active=${asBool(x.active)},updated_at=NOW() WHERE id=${id}`;await logAction('Изменена рассылка',title);return NextResponse.json({ok:true})}
+  return NextResponse.json({error:'Неизвестный тип'},{status:400})
+ }catch(e:any){return NextResponse.json({error:e?.message||'Ошибка сохранения'},{status:400})}
 }
 export async function DELETE(req:Request){
  if(!(await isAdmin()))return bad();if(!db)return NextResponse.json({error:'DATABASE_URL не настроен'},{status:503});await ensureSchema();const x=await req.json().catch(()=>({}));

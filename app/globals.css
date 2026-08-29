@@ -95,37 +95,61 @@ button{border:0;background:none;color:inherit}
 @media(max-width:700px){.extra-links-title{flex-direction:column}.extra-links-title .primary{width:100%}.extra-link-row,.current-update-main{grid-template-columns:1fr}.updates-modal{padding:20px}.update-card-top{align-items:flex-start;flex-direction:column;gap:4px}}
 
 
-/* FIX 8.9.5.3 — районы без обрезания карточек и изображений */
+/* FIX 8.9.5.7 — нормальный размер карточек районов.
+   Не растягиваем единственный район на всю строку. */
 .district-grid{
-  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  grid-template-columns:repeat(4,minmax(0,1fr));
   align-items:stretch;
+  justify-content:start;
   width:100%;
 }
 .district-card{
   min-width:0;
   width:100%;
+  max-width:100%;
   overflow:hidden;
   border-radius:18px;
 }
 .district-card>img{
   width:100%;
   max-width:100%;
-  height:auto;
-  aspect-ratio:16/10;
+  height:180px;
+  aspect-ratio:auto;
   object-fit:cover;
+  object-position:center;
   display:block;
 }
 .district-card>div{
   min-width:0;
   overflow-wrap:anywhere;
 }
-.material-card{
-  min-width:0;
+.material-card{min-width:0}
+
+@media(max-width:1100px){
+  .district-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @media(max-width:800px){
+  .district-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .district-card>img{height:170px}
+}
+@media(max-width:560px){
   .district-grid{grid-template-columns:1fr}
-  .district-card>img{aspect-ratio:16/9}
+  .district-card>img{height:190px}
 }
 
 /* Связь вкладок с районами */
 .admin-form select{width:100%;border:1px solid #315c48;background:#0b1b14;color:#eaf4ee;border-radius:12px;padding:13px 14px;font:inherit;outline:none}.admin-form select:focus{border-color:#6ed889;box-shadow:0 0 0 3px rgba(110,216,137,.12)}.linked-district{margin:0 0 16px;padding:12px 14px;border:1px solid #315c48;border-radius:12px;background:#10271b;color:#cde2d4}.linked-district b{color:#7cdd95}
+
+/* 8.9.5.8 — материалы внутри вкладок */
+.tab-posts{margin:8px 0 18px;padding:18px;border:1px solid rgba(111,217,141,.24);border-radius:22px;background:rgba(15,50,35,.42)}
+.tab-post-card{display:grid;gap:12px}
+.tab-materials{margin-top:28px;padding-top:24px;border-top:1px solid rgba(255,255,255,.1)}
+.tab-materials-head h3{margin:6px 0 16px;font-size:26px}
+.tab-materials-list{display:grid;gap:16px}
+.tab-material{display:grid;grid-template-columns:minmax(180px,320px) 1fr;overflow:hidden;border:1px solid rgba(111,217,141,.25);border-radius:18px;background:rgba(5,26,18,.72)}
+.tab-material>img{width:100%;height:210px;object-fit:cover;display:block}
+.tab-material>div{padding:20px}
+.tab-material span{font-size:12px;font-weight:800;letter-spacing:.08em;color:#7ddd9a;text-transform:uppercase}
+.tab-material h4{margin:8px 0;font-size:22px}
+.tab-material p{margin:0;white-space:pre-wrap;line-height:1.65}
+@media(max-width:700px){.tab-material{grid-template-columns:1fr}.tab-material>img{height:190px}.tab-posts{padding:14px}.tab-material>div{padding:16px}}
